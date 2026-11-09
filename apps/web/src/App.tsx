@@ -1,62 +1,21 @@
-import {
-  Badge,
-  Card,
-  Container,
-  Group,
-  SimpleGrid,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Navigate, Route, Routes } from "react-router";
+import { AppLayout } from "./app/layouts/app-layout";
+import { DashboardPage } from "./features/dashboard/pages/dashboard-page";
+import { SettingsPage } from "./features/settings/pages/settings-page";
+import { TestRunsPage } from "./features/test-runs/pages/test-run-page";
+import { NotFoundPage } from "./app/pages/not-found-page";
 
 function App() {
   return (
-    <Container size="xl" py="xl">
-      <Stack gap="xl">
-        <Group justify="space-between">
-          <div>
-            <Title order={2}>Frontend QA Lab</Title>
-            <Text c="dimmed" size="sm">
-              AI-powered frontend testing platform
-            </Text>
-          </div>
-
-          <Badge color="blue" variant="light">
-            Development
-          </Badge>
-        </Group>
-
-        <SimpleGrid cols={{ base: 1, sm: 3 }}>
-          <Card withBorder>
-            <Text c="dimmed" size="sm">
-              Total Runs
-            </Text>
-            <Title order={2}>24</Title>
-          </Card>
-
-          <Card withBorder>
-            <Text c="dimmed" size="sm">
-              Passed
-            </Text>
-            <Title order={2}>18</Title>
-          </Card>
-
-          <Card withBorder>
-            <Text c="dimmed" size="sm">
-              Failed
-            </Text>
-            <Title order={2}>6</Title>
-          </Card>
-        </SimpleGrid>
-
-        <Card withBorder>
-          <Title order={4}>Recent Runs</Title>
-          <Text c="dimmed" size="sm" mt="sm">
-            No test runs yet.
-          </Text>
-        </Card>
-      </Stack>
-    </Container>
+    <Routes>
+      <Route path="/" element={<AppLayout />}>
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="test-runs" element={<TestRunsPage />} />
+        <Route path="settings" element={<SettingsPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
+    </Routes>
   );
 }
 

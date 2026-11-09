@@ -1,0 +1,31 @@
+.root {
+  color: #cbd5e1;
+  background-color: transparent;
+  border-radius: 8px;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.label {
+  color: inherit;
+  font-weight: 500;
+}
+
+/* Hover */
+.root:hover {
+  background-color: #46566b;
+  color: #ffffff;
+}
+
+/* Active */
+.root[data-active] {
+  background-color: #52647d;
+  color: #ffffff;
+}
+
+/* Keyboard focus */
+.root:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
