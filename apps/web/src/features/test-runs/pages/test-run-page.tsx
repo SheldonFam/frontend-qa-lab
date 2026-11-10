@@ -6,6 +6,8 @@ import { TestRunStats } from "../components/test-run-stats";
 import { TestRunTable } from "../components/test-run-table";
 import { mockTestRunsData } from "../data/mock-test-runs";
 import type { TestRun } from "../types/test-run";
+import { generateScenarios } from "../../test-configuration/utils/generate-scenarios";
+import type { TestConfiguration } from "../../test-configuration/types/test-configuration";
 
 type TestRunStatusFilter = "all" | TestRun["status"];
 
@@ -39,6 +41,20 @@ export function TestRunsPage() {
       (testRun) => testRun.status === "running",
     ).length,
   };
+
+  const configuration: TestConfiguration = {
+    targetUrl: "https://example.com",
+    languages: ["en", "zh"],
+    routes: ["/", "/login"],
+    viewports: [
+      { name: "Desktop", width: 1440, height: 900 },
+      { name: "Mobile", width: 390, height: 844 },
+    ],
+  };
+  const scenarios = generateScenarios(configuration);
+
+  console.log(scenarios);
+  console.log("Total:", scenarios.length);
 
   return (
     <Container

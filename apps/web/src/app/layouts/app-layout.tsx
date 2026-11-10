@@ -9,6 +9,7 @@ import { AppHeader } from "../../components/layout/app-header";
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/test-runs": "Test Runs",
+  "/test-configuration": "New Test",
   "/settings": "Settings",
 };
 

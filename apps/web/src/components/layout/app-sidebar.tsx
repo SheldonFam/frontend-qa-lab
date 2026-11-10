@@ -15,6 +15,10 @@ const navigationItems: NavigationItem[] = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Test Runs", href: "/test-runs" },
   { label: "Settings", href: "/settings" },
+  {
+    label: "New Test",
+    href: "/test-configuration",
+  },
 ];
 
 export function AppSidebar({ onNavigate }: AppSidebarProps) {

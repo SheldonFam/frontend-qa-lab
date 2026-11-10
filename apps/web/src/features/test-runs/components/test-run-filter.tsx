@@ -38,7 +38,12 @@ export function TestRunFilter({
       <Chip.Group value={selectedStatus} onChange={onStatusChange}>
         <Group gap="xs" wrap="wrap">
           {filterChips.map((chip) => (
-            <Chip key={chip.value} value={chip.value} variant="light">
+            <Chip
+              key={chip.value}
+              value={chip.value}
+              variant="light"
+              icon={null}
+            >
               {chip.label}
             </Chip>
           ))}

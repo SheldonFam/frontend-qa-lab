@@ -4,6 +4,7 @@ import { DashboardPage } from "./features/dashboard/pages/dashboard-page";
 import { SettingsPage } from "./features/settings/pages/settings-page";
 import { TestRunsPage } from "./features/test-runs/pages/test-run-page";
 import { NotFoundPage } from "./app/pages/not-found-page";
+import { TestConfigurationPage } from "./features/test-configuration/pages/test-configuration-page";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="test-runs" element={<TestRunsPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="test-configuration" element={<TestConfigurationPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
