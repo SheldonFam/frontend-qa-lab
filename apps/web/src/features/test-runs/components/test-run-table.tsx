@@ -2,24 +2,19 @@ import {
   Badge,
   Box,
   Group,
+  Paper,
   Progress,
-  ScrollArea,
   Table,
   Text,
   Stack,
 } from "@mantine/core";
 
-import type { TestRun, TestRunStatus } from "../types/test-run";
+import { StatusBadge } from "../../../components/status-badge";
+import type { TestRun } from "../types/test-run";
 
 interface TestRunTableProps {
   filteredResults: TestRun[];
 }
-
-const statusColors: Record<TestRunStatus, string> = {
-  passed: "green",
-  failed: "red",
-  running: "blue",
-};
 
 function formatDuration(testRun: TestRun): string {
   if (testRun.status === "running") {
@@ -80,19 +75,7 @@ export function TestRunTable({ filteredResults }: TestRunTableProps) {
 
         {/* Status */}
         <Table.Td>
-          <Badge
-            color={statusColors[testRun.status]}
-            variant="light"
-            radius="sm"
-            // Mantine's Badge clips its label (overflow: hidden), which lets the
-            // table shrink this column until the text becomes "P…". Keep it full width.
-            styles={{
-              root: { overflow: "visible" },
-              label: { overflow: "visible" },
-            }}
-          >
-            {testRun.status}
-          </Badge>
+          <StatusBadge status={testRun.status} />
         </Table.Td>
 
         {/* Scenarios */}
@@ -108,7 +91,12 @@ export function TestRunTable({ filteredResults }: TestRunTableProps) {
               </Text>
             </Group>
 
-            <Progress value={progress} size="xs" radius="xl" />
+            <Progress
+              value={progress}
+              size="xs"
+              radius="xl"
+              aria-label="Scenario progress"
+            />
 
             <Text size="xs" c="dimmed">
               {testRun.passedScenarios} passed · {testRun.failedScenarios}{" "}
@@ -121,7 +109,7 @@ export function TestRunTable({ filteredResults }: TestRunTableProps) {
         <Table.Td>
           <Group gap={4}>
             {testRun.languages.map((language) => (
-              <Badge key={language} variant="outline" color="gray" size="sm">
+              <Badge key={language} variant="default" size="sm">
                 {language.toUpperCase()}
               </Badge>
             ))}
@@ -150,20 +138,15 @@ export function TestRunTable({ filteredResults }: TestRunTableProps) {
   });
 
   return (
-    <Box
-      bg="white"
-      style={{
-        border: "1px solid var(--mantine-color-gray-3)",
-        borderRadius: "var(--mantine-radius-md)",
-      }}
-    >
-      <ScrollArea type="auto" offsetScrollbars>
+    <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+      {/* type="native" uses the browser's own scrollbar. Mantine's default
+          scrollbar leaves an empty gap under the last row. */}
+      <Table.ScrollContainer minWidth={900} type="native">
         <Table
           striped
           highlightOnHover
           verticalSpacing="md"
           horizontalSpacing="lg"
-          miw={900}
         >
           <Table.Thead>
             <Table.Tr>
@@ -193,7 +176,7 @@ export function TestRunTable({ filteredResults }: TestRunTableProps) {
             )}
           </Table.Tbody>
         </Table>
-      </ScrollArea>
-    </Box>
+      </Table.ScrollContainer>
+    </Paper>
   );
 }

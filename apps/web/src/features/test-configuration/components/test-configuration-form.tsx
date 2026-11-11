@@ -1,6 +1,7 @@
 import {
   Button,
   Checkbox,
+  Group,
   MultiSelect,
   Paper,
   Stack,
@@ -42,9 +43,12 @@ function isValidHttpUrl(value: string): boolean {
   }
 }
 
-export function TestConfigurationForm({ onSubmit }: TestConfigurationFormProps) {
+export function TestConfigurationForm({
+  onSubmit,
+}: TestConfigurationFormProps) {
   const form = useForm<TestConfigurationFormValues>({
     mode: "controlled",
+    validateInputOnBlur: true,
     initialValues: {
       targetUrl: "",
       languages: [],
@@ -68,10 +72,19 @@ export function TestConfigurationForm({ onSubmit }: TestConfigurationFormProps) 
       languages: (value) =>
         value.length === 0 ? "Select at least one language" : null,
 
-      routes: (value) =>
-        !value.some((route) => route.trim().length > 0)
-          ? "Enter at least one route"
-          : null,
+      routes: (value) => {
+        const routes = value.map((route) => route.trim()).filter(Boolean);
+
+        if (routes.length === 0) {
+          return "Enter at least one route";
+        }
+
+        if (routes.some((route) => !route.startsWith("/"))) {
+          return 'Routes must start with "/", for example /login';
+        }
+
+        return null;
+      },
 
       selectedViewportNames: (value) =>
         value.length === 0 ? "Select at least one viewport" : null,
@@ -98,7 +111,9 @@ export function TestConfigurationForm({ onSubmit }: TestConfigurationFormProps) 
       <Paper withBorder radius="md" p="lg">
         <Stack gap="lg">
           <Stack gap={4}>
-            <Title order={4}>Test Configuration</Title>
+            <Title order={2} size="h4">
+              Test Configuration
+            </Title>
 
             <Text size="sm" c="dimmed">
               Configure the target URL, languages, routes and viewports.
@@ -147,7 +162,11 @@ export function TestConfigurationForm({ onSubmit }: TestConfigurationFormProps) 
             </Stack>
           </Checkbox.Group>
 
-          <Button type="submit">Generate Scenarios</Button>
+          <Group justify="flex-end">
+            <Button type="submit" w={{ base: "100%", sm: "auto" }}>
+              Generate Scenarios
+            </Button>
+          </Group>
         </Stack>
       </Paper>
     </form>

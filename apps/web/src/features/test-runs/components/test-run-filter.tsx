@@ -26,6 +26,7 @@ export function TestRunFilter({
   return (
     <Group align="center" justify="space-between" gap="md" wrap="wrap">
       <TextInput
+        aria-label="Search test runs"
         placeholder="Search test runs..."
         value={searchQuery}
         onChange={(event) => onSearchChange(event.currentTarget.value)}
@@ -35,7 +36,12 @@ export function TestRunFilter({
       />
 
       <Chip.Group value={selectedStatus} onChange={onStatusChange}>
-        <Group gap="xs" wrap="wrap">
+        <Group
+          gap="xs"
+          wrap="wrap"
+          role="radiogroup"
+          aria-label="Filter by status"
+        >
           {filterChips.map((chip) => (
             <Chip
               key={chip.value}

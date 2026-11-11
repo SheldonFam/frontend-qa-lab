@@ -1,61 +1,53 @@
-import {
-  Badge,
-  Card,
-  Container,
-  Group,
-  SimpleGrid,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Anchor, Badge, Button, Group, Stack, Title } from "@mantine/core";
+import { Plus } from "lucide-react";
+import { Link } from "react-router";
+
+import { Page } from "../../../components/layout/page";
+import { TestRunStats } from "../../test-runs/components/test-run-stats";
+import { TestRunTable } from "../../test-runs/components/test-run-table";
+import { mockTestRunsData } from "../../test-runs/data/mock-test-runs";
+import { getTestRunStats } from "../../test-runs/utils/get-test-run-stats";
 
 export function DashboardPage() {
-  return (
-    <Container size="xl" py="xl">
-      <Stack gap="xl">
-        <Group justify="space-between">
-          <div>
-            <Title order={2}>Overview</Title>
-            <Text c="dimmed" size="sm">
-              AI-powered frontend testing platform
-            </Text>
-          </div>
+  const recentTestRuns = mockTestRunsData
+    .toSorted((a, b) => b.startedAt.localeCompare(a.startedAt))
+    .slice(0, 3);
 
+  return (
+    <Page
+      title="Overview"
+      description="AI-powered frontend testing platform"
+      actions={
+        <Group gap="sm">
           <Badge color="blue" variant="light">
             Development
           </Badge>
+
+          <Button
+            component={Link}
+            to="/test-configuration"
+            leftSection={<Plus size={16} strokeWidth={1.8} />}
+          >
+            New Test Run
+          </Button>
+        </Group>
+      }
+    >
+      <TestRunStats stats={getTestRunStats(mockTestRunsData)} />
+
+      <Stack gap="md">
+        <Group justify="space-between">
+          <Title order={2} size="h4">
+            Recent Runs
+          </Title>
+
+          <Anchor component={Link} to="/test-runs" size="sm">
+            View all runs
+          </Anchor>
         </Group>
 
-        <SimpleGrid cols={{ base: 1, sm: 3 }}>
-          <Card withBorder>
-            <Text c="dimmed" size="sm">
-              Total Runs
-            </Text>
-            <Title order={2}>24</Title>
-          </Card>
-
-          <Card withBorder>
-            <Text c="dimmed" size="sm">
-              Passed
-            </Text>
-            <Title order={2}>18</Title>
-          </Card>
-
-          <Card withBorder>
-            <Text c="dimmed" size="sm">
-              Failed
-            </Text>
-            <Title order={2}>6</Title>
-          </Card>
-        </SimpleGrid>
-
-        <Card withBorder>
-          <Title order={4}>Recent Runs</Title>
-          <Text c="dimmed" size="sm" mt="sm">
-            No test runs yet.
-          </Text>
-        </Card>
+        <TestRunTable filteredResults={recentTestRuns} />
       </Stack>
-    </Container>
+    </Page>
   );
 }

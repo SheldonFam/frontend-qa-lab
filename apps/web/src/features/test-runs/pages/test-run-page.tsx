@@ -1,11 +1,15 @@
-import { Container, Stack, Text, Title } from "@mantine/core";
+import { Button, Stack, Text, Title } from "@mantine/core";
+import { Plus } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router";
 
+import { Page } from "../../../components/layout/page";
 import { TestRunFilter } from "../components/test-run-filter";
 import { TestRunStats } from "../components/test-run-stats";
 import { TestRunTable } from "../components/test-run-table";
 import { mockTestRunsData } from "../data/mock-test-runs";
 import type { TestRunStatusFilter } from "../types/test-run";
+import { getTestRunStats } from "../utils/get-test-run-stats";
 
 export function TestRunsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,56 +29,49 @@ export function TestRunsPage() {
     return (nameMatch || urlMatch) && statusMatches;
   });
 
-  const stats = {
-    totalRuns: mockTestRunsData.length,
-    passedRuns: mockTestRunsData.filter(
-      (testRun) => testRun.status === "passed",
-    ).length,
-    failedRuns: mockTestRunsData.filter(
-      (testRun) => testRun.status === "failed",
-    ).length,
-    runningRuns: mockTestRunsData.filter(
-      (testRun) => testRun.status === "running",
-    ).length,
-  };
-
   return (
-    <Container
-      size="xl"
-      py={{ base: "md", sm: "xl" }}
-      px={{ base: "sm", sm: "md" }}
+    <Page
+      title="Test Runs"
+      description="Monitor and manage your frontend test executions."
+      actions={
+        <Button
+          component={Link}
+          to="/test-configuration"
+          leftSection={<Plus size={16} strokeWidth={1.8} />}
+        >
+          New Test Run
+        </Button>
+      }
     >
-      <Stack gap="xl">
-        {/* Page Header */}
+      {/* Statistics */}
+      <TestRunStats stats={getTestRunStats(mockTestRunsData)} />
+
+      {/* Test Run History */}
+      <Stack gap="md">
         <Stack gap={4}>
-          <Title order={2}>Test Runs</Title>
+          <Title order={2} size="h4">
+            Test Run History
+          </Title>
           <Text size="sm" c="dimmed">
-            Monitor and manage your frontend test executions.
+            View and filter your previous test executions.
           </Text>
         </Stack>
 
-        {/* Statistics */}
-        <TestRunStats stats={stats} />
+        <TestRunFilter
+          searchQuery={searchQuery}
+          selectedStatus={selectedStatus}
+          onSearchChange={setSearchQuery}
+          onStatusChange={setSelectedStatus}
+        />
 
-        {/* Test Run History */}
-        <Stack gap="md">
-          <Stack gap={4}>
-            <Title order={4}>Test Run History</Title>
-            <Text size="sm" c="dimmed">
-              View and filter your previous test executions.
-            </Text>
-          </Stack>
+        {/* role="status" makes screen readers read out the new count */}
+        <Text size="sm" c="dimmed" role="status">
+          Showing {filteredTestRuns.length} of {mockTestRunsData.length} test
+          runs
+        </Text>
 
-          <TestRunFilter
-            searchQuery={searchQuery}
-            selectedStatus={selectedStatus}
-            onSearchChange={setSearchQuery}
-            onStatusChange={setSelectedStatus}
-          />
-
-          <TestRunTable filteredResults={filteredTestRuns} />
-        </Stack>
+        <TestRunTable filteredResults={filteredTestRuns} />
       </Stack>
-    </Container>
+    </Page>
   );
 }

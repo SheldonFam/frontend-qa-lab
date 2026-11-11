@@ -4,10 +4,16 @@ import { Link } from "react-router";
 export function NotFoundPage() {
   return (
     <Center mih="60vh">
-      <Stack align="center" gap="sm">
-        <Title order={1}>404</Title>
+      <title>Page Not Found · Frontend QA Lab</title>
 
-        <Title order={3}>Page Not Found</Title>
+      <Stack align="center" gap="sm">
+        <Text fz={34} fw={700} lh={1.3}>
+          404
+        </Text>
+
+        <Title order={1} size="h3">
+          Page Not Found
+        </Title>
 
         <Text c="dimmed" size="sm">
           The page you are looking for does not exist.

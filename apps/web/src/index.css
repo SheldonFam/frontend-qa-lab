@@ -1,5 +1,4 @@
 :root {
-  font-family: Inter, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -12,4 +11,9 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+}
+
+/* Give every digit the same width, so numbers in table columns line up. */
+table {
+  font-variant-numeric: tabular-nums;
 }
