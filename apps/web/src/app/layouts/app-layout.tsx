@@ -1,17 +1,10 @@
-import { useEffect } from "react";
-import { Box, Drawer, Flex } from "@mantine/core";
+import { Box, Burger, Drawer, Flex } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { Outlet, useLocation } from "react-router";
 
 import { AppSidebar } from "../../components/layout/app-sidebar";
 import { AppHeader } from "../../components/layout/app-header";
-
-const pageTitles: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/test-runs": "Test Runs",
-  "/test-configuration": "New Test",
-  "/settings": "Settings",
-};
+import { navigationItems } from "../../components/layout/navigation-items";
 
 export function AppLayout() {
   const location = useLocation();
@@ -20,14 +13,12 @@ export function AppLayout() {
 
   const isMobile = useMediaQuery("(max-width: 991px)");
 
-  const pageTitle = pageTitles[location.pathname] || "Frontend QA Lab";
+  // The drawer is mobile-only, so it is never open on desktop.
+  const drawerOpened = isMobile && opened;
 
-  // Close the Drawer when switching back to Desktop.
-  useEffect(() => {
-    if (!isMobile) {
-      close();
-    }
-  }, [isMobile, close]);
+  const pageTitle =
+    navigationItems.find((item) => item.href === location.pathname)?.label ??
+    "Frontend QA Lab";
 
   return (
     <Flex h="100vh" bg="gray.0">
@@ -47,9 +38,16 @@ export function AppLayout() {
       <Flex flex={1} direction="column" miw={0} h="100%">
         <AppHeader
           title={pageTitle}
-          menuOpened={opened}
-          onMenuClick={open}
-          showMenuButton={isMobile}
+          leftSection={
+            isMobile && (
+              <Burger
+                opened={drawerOpened}
+                onClick={open}
+                size="sm"
+                aria-label="Toggle navigation"
+              />
+            )
+          }
         />
 
         <Box
@@ -64,26 +62,24 @@ export function AppLayout() {
       </Flex>
 
       {/* Mobile / Tablet Navigation */}
-      {isMobile && (
-        <Drawer
-          opened={opened}
-          onClose={close}
-          position="left"
-          size={260}
-          withCloseButton={false}
-          padding={0}
-          styles={{
-            content: {
-              backgroundColor: "var(--mantine-color-dark-7)",
-            },
-            body: {
-              padding: 0,
-            },
-          }}
-        >
-          <AppSidebar onNavigate={close} />
-        </Drawer>
-      )}
+      <Drawer
+        opened={drawerOpened}
+        onClose={close}
+        position="left"
+        size={260}
+        withCloseButton={false}
+        padding={0}
+        styles={{
+          content: {
+            backgroundColor: "var(--mantine-color-dark-7)",
+          },
+          body: {
+            padding: 0,
+          },
+        }}
+      >
+        <AppSidebar onNavigate={close} />
+      </Drawer>
     </Flex>
   );
 }

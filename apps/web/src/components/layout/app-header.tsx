@@ -1,18 +1,13 @@
-import { Burger, Group, Title } from "@mantine/core";
+import type { ReactNode } from "react";
+import { Group, Title } from "@mantine/core";
 
 interface AppHeaderProps {
   title: string;
-  menuOpened: boolean;
-  onMenuClick: () => void;
-  showMenuButton: boolean;
+  /** Rendered before the title, e.g. the mobile navigation toggle. */
+  leftSection?: ReactNode;
 }
 
-export function AppHeader({
-  title,
-  menuOpened,
-  onMenuClick,
-  showMenuButton,
-}: AppHeaderProps) {
+export function AppHeader({ title, leftSection }: AppHeaderProps) {
   return (
     <header>
       <Group
@@ -24,14 +19,7 @@ export function AppHeader({
         bg="white"
         style={{ borderBottom: "1px solid #e9ecef" }}
       >
-        {showMenuButton && (
-          <Burger
-            opened={menuOpened}
-            onClick={onMenuClick}
-            size="sm"
-            aria-label="Toggle navigation"
-          />
-        )}
+        {leftSection}
 
         <Title order={4}>{title}</Title>
       </Group>

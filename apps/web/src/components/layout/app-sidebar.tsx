@@ -1,25 +1,11 @@
 import { NavLink, Stack, Text } from "@mantine/core";
 import { Link, useLocation } from "react-router";
 import classes from "./app-sidebar.module.css";
-
-interface NavigationItem {
-  label: string;
-  href: string;
-}
+import { navigationItems } from "./navigation-items";
 
 interface AppSidebarProps {
   onNavigate?: () => void;
 }
-
-const navigationItems: NavigationItem[] = [
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "Test Runs", href: "/test-runs" },
-  { label: "Settings", href: "/settings" },
-  {
-    label: "New Test",
-    href: "/test-configuration",
-  },
-];
 
 export function AppSidebar({ onNavigate }: AppSidebarProps) {
   const location = useLocation();
