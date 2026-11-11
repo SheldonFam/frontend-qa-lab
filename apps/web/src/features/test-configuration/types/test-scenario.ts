@@ -1,3 +1,4 @@
+import type { LanguageCode } from "../constants/languages";
 import type { Viewport } from "./viewport";
 
 export type TestScenarioStatus =
@@ -9,7 +10,7 @@ export type TestScenarioStatus =
 
 export interface TestScenario {
   id: string;
-  language: string;
+  language: LanguageCode;
   route: string;
   viewport: Viewport;
   status: TestScenarioStatus;

@@ -6,7 +6,7 @@ import { generateScenarios } from "./generate-scenarios";
 describe("generateScenarios", () => {
   const configurations: TestConfiguration = {
     targetUrl: "https://example.com",
-    languages: ["en", "bm"],
+    languages: ["en", "ms"],
     routes: ["/", "/login"],
     viewports: [
       { name: "Desktop", width: 1440, height: 900 },

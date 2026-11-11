@@ -1,13 +1,30 @@
-export interface TestRun {
+import type { LanguageCode } from "../../test-configuration/constants/languages";
+
+interface TestRunBase {
   id: string;
   name: string;
   targetUrl: string;
-  status: "passed" | "failed" | "running";
   totalScenarios: number;
   passedScenarios: number;
   failedScenarios: number;
   skippedScenarios: number;
-  languages: string[];
+  languages: LanguageCode[];
   startedAt: string;
-  duration: number | null;
 }
+
+// A running test has no duration yet; a finished one always has one.
+interface RunningTestRun extends TestRunBase {
+  status: "running";
+  duration: null;
+}
+
+interface FinishedTestRun extends TestRunBase {
+  status: "passed" | "failed";
+  duration: number;
+}
+
+export type TestRun = RunningTestRun | FinishedTestRun;
+
+export type TestRunStatus = TestRun["status"];
+
+export type TestRunStatusFilter = "all" | TestRunStatus;

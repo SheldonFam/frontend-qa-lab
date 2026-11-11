@@ -1,8 +1,7 @@
 import { Chip, Group, TextInput } from "@mantine/core";
-import type { TestRun } from "../types/test-run";
 import { Search } from "lucide-react";
 
-type TestRunStatusFilter = "all" | TestRun["status"];
+import type { TestRunStatusFilter } from "../types/test-run";
 
 interface TestRunFilterProps {
   searchQuery: string;
@@ -11,7 +10,7 @@ interface TestRunFilterProps {
   onStatusChange: (value: TestRunStatusFilter) => void;
 }
 
-const filterChips = [
+const filterChips: { label: string; value: TestRunStatusFilter }[] = [
   { label: "All", value: "all" },
   { label: "Passed", value: "passed" },
   { label: "Failed", value: "failed" },

@@ -9,25 +9,25 @@ import {
   Stack,
 } from "@mantine/core";
 
-import type { TestRun } from "../types/test-run";
+import type { TestRun, TestRunStatus } from "../types/test-run";
 
 interface TestRunTableProps {
   filteredResults: TestRun[];
 }
 
-function getStatusColor(status: TestRun["status"]): string {
-  if (status === "passed") return "green";
-  if (status === "failed") return "red";
-  return "blue";
-}
+const statusColors: Record<TestRunStatus, string> = {
+  passed: "green",
+  failed: "red",
+  running: "blue",
+};
 
-function formatDuration(duration: number | null): string {
-  if (duration === null) {
+function formatDuration(testRun: TestRun): string {
+  if (testRun.status === "running") {
     return "In progress";
   }
 
-  const minutes = Math.floor(duration / 60);
-  const seconds = duration % 60;
+  const minutes = Math.floor(testRun.duration / 60);
+  const seconds = testRun.duration % 60;
 
   return `${minutes}m ${seconds}s`;
 }
@@ -81,7 +81,7 @@ export function TestRunTable({ filteredResults }: TestRunTableProps) {
         {/* Status */}
         <Table.Td>
           <Badge
-            color={getStatusColor(testRun.status)}
+            color={statusColors[testRun.status]}
             variant="light"
             radius="sm"
             // Mantine's Badge clips its label (overflow: hidden), which lets the
@@ -139,10 +139,10 @@ export function TestRunTable({ filteredResults }: TestRunTableProps) {
         <Table.Td>
           <Text
             size="sm"
-            c={testRun.duration === null ? "blue" : "dimmed"}
+            c={testRun.status === "running" ? "blue" : "dimmed"}
             style={{ whiteSpace: "nowrap" }}
           >
-            {formatDuration(testRun.duration)}
+            {formatDuration(testRun)}
           </Text>
         </Table.Td>
       </Table.Tr>
