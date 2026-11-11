@@ -9,7 +9,7 @@ import { navigationItems } from "../../components/layout/navigation-items";
 export function AppLayout() {
   const location = useLocation();
 
-  const [opened, { open, close }] = useDisclosure(false);
+  const [opened, handlers] = useDisclosure(false);
 
   const isMobile = useMediaQuery("(max-width: 991px)");
 
@@ -42,7 +42,7 @@ export function AppLayout() {
             isMobile && (
               <Burger
                 opened={drawerOpened}
-                onClick={open}
+                onClick={handlers.open}
                 size="sm"
                 aria-label="Toggle navigation"
               />
@@ -64,7 +64,7 @@ export function AppLayout() {
       {/* Mobile / Tablet Navigation */}
       <Drawer
         opened={drawerOpened}
-        onClose={close}
+        onClose={handlers.close}
         position="left"
         size={260}
         withCloseButton={false}
@@ -78,7 +78,7 @@ export function AppLayout() {
           },
         }}
       >
-        <AppSidebar onNavigate={close} />
+        <AppSidebar onNavigate={handlers.close} />
       </Drawer>
     </Flex>
   );
