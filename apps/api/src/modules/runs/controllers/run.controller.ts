@@ -1,7 +1,12 @@
 import type { RequestHandler } from "express";
 
 import { testConfigurationSchema } from "../schemas/test-configuration.schema.js";
-import { createRun, getAllRuns, getRun } from "../services/run.service.js";
+import {
+  createRun,
+  executeRun,
+  getAllRuns,
+  getRun,
+} from "../services/run.service.js";
 
 export const createRunController: RequestHandler = (req, res) => {
   const result = testConfigurationSchema.safeParse(req.body);
@@ -21,9 +26,15 @@ export const createRunController: RequestHandler = (req, res) => {
 
   const testRun = createRun(result.data);
 
+  // Return HTTP 202 immediately
   res.status(202).json({
     success: true,
     data: testRun,
+  });
+
+  // Execute the Run in the background
+  executeRun(testRun.id, result.data).catch((error: unknown) => {
+    console.error(`Failed to execute run ${testRun.id}:`, error);
   });
 };
 

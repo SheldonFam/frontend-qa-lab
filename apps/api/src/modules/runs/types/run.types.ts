@@ -1,4 +1,4 @@
-import type { TestScenario } from "../utils/generate-scenarios.js";
+import { ScenarioResult, TestScenario } from "./scenario.types.js";
 
 export type RunStatus =
   | "queued"
@@ -15,4 +15,5 @@ export type TestRun = {
   startedAt: string | null;
   completedAt: string | null;
   scenarios: TestScenario[];
+  results: ScenarioResult[];
 };

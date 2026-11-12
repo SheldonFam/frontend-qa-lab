@@ -2,14 +2,7 @@ import type {
   TestConfiguration,
   Viewport,
 } from "../schemas/test-configuration.schema.js";
-
-export type TestScenario = {
-  id: string;
-  language: string;
-  route: string;
-  viewport: Viewport;
-  status: "pending";
-};
+import type { TestScenario } from "../types/scenario.types.js";
 
 function createScenario(
   language: string,
