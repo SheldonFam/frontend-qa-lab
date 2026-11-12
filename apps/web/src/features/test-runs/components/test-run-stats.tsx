@@ -3,7 +3,7 @@ import { Card, SimpleGrid, Stack, Text } from "@mantine/core";
 interface TestRunStatsProps {
   stats: {
     totalRuns: number;
-    passedRuns: number;
+    completedRuns: number;
     failedRuns: number;
     runningRuns: number;
   };
@@ -19,10 +19,10 @@ export function TestRunStats({ stats }: TestRunStatsProps) {
       color: "bright",
     },
     {
-      value: stats.passedRuns,
-      label: "Passed",
-      description: "Successful runs",
-      color: "green",
+      value: stats.completedRuns,
+      label: "Completed",
+      description: "Finished executions",
+      color: "teal",
     },
     {
       value: stats.failedRuns,

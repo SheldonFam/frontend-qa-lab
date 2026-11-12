@@ -6,7 +6,7 @@ export function getTestRunStats(testRuns: TestRun[]) {
 
   return {
     totalRuns: testRuns.length,
-    passedRuns: countByStatus("passed"),
+    completedRuns: countByStatus("completed"),
     failedRuns: countByStatus("failed"),
     runningRuns: countByStatus("running"),
   };

@@ -1,17 +1,26 @@
 import { Badge } from "@mantine/core";
 
 import type { TestScenarioStatus } from "../features/test-configuration/types/test-scenario";
+import type { TestRunStatus } from "../features/test-runs/types/test-run";
 
-const statusColors: Record<TestScenarioStatus, string> = {
+type Status = TestScenarioStatus | TestRunStatus;
+
+const statusColors: Record<Status, string> = {
+  // Scenario Status
   pending: "gray",
-  running: "blue",
   passed: "green",
-  failed: "red",
   skipped: "gray",
+
+  // Run Status
+  queued: "yellow",
+  running: "blue",
+  completed: "teal",
+  failed: "red",
+  cancelled: "gray",
 };
 
 interface StatusBadgeProps {
-  status: TestScenarioStatus;
+  status: Status;
 }
 
 // variant="dot" shows a small colored dot next to dark text. (With colored
