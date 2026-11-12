@@ -1,11 +1,11 @@
 import type { TestRun } from "../types/run.types.js";
+import type { ScenarioResult } from "../types/scenario.types.js";
 
 const runs: TestRun[] = [];
 
 export const runRepository = {
   create(testRun: TestRun): TestRun {
     runs.push(testRun);
-
     return testRun;
   },
 
@@ -32,5 +32,19 @@ export const runRepository = {
     Object.assign(run, updates);
 
     return run;
+  },
+
+  addScenarioResult(runId: string, result: ScenarioResult): void {
+    const run = this.findById(runId);
+
+    if (!run) {
+      throw new Error("Run not found");
+    }
+
+    run.results.push(result);
+  },
+
+  clear(): void {
+    runs.length = 0;
   },
 };
