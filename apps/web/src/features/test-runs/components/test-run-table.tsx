@@ -1,4 +1,5 @@
 import {
+  Anchor,
   Badge,
   Box,
   Group,
@@ -11,14 +12,23 @@ import {
 
 import { StatusBadge } from "../../../components/status-badge";
 import type { TestRun } from "../types/test-run";
+import { Link } from "react-router";
 
 interface TestRunTableProps {
   filteredResults: TestRun[];
 }
 
 function formatDuration(testRun: TestRun): string {
+  if (testRun.status === "queued") {
+    return "Queued";
+  }
+
   if (testRun.status === "running") {
     return "In progress";
+  }
+
+  if (testRun.duration === null) {
+    return "—";
   }
 
   const minutes = Math.floor(testRun.duration / 60);
@@ -63,9 +73,14 @@ export function TestRunTable({ filteredResults }: TestRunTableProps) {
         {/* Test Run */}
         <Table.Td>
           <Stack gap={4}>
-            <Text size="sm" fw={600}>
+            <Anchor
+              component={Link}
+              to={`/test-runs/${testRun.id}`}
+              size="sm"
+              fw={600}
+            >
               {testRun.name}
-            </Text>
+            </Anchor>
 
             <Text size="xs" c="dimmed" truncate maw={220}>
               {testRun.targetUrl}
@@ -119,7 +134,7 @@ export function TestRunTable({ filteredResults }: TestRunTableProps) {
         {/* Started At */}
         <Table.Td>
           <Text size="sm" style={{ whiteSpace: "nowrap" }}>
-            {formatDate(testRun.startedAt)}
+            {testRun.startedAt ? formatDate(testRun.startedAt) : "Not started"}
           </Text>
         </Table.Td>
 

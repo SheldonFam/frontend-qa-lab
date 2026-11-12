@@ -5,6 +5,7 @@ import {
 } from "@mantine/core";
 
 import "@mantine/core/styles.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -44,9 +45,15 @@ const cssVariablesResolver: CSSVariablesResolver = () => ({
 });
 
 export function AppProviders({ children }: AppProvidersProps) {
+  const queryClient = new QueryClient();
   return (
-    <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver}>
-      {children}
-    </MantineProvider>
+    <QueryClientProvider client={queryClient}>
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+      >
+        {children}
+      </MantineProvider>
+    </QueryClientProvider>
   );
 }
