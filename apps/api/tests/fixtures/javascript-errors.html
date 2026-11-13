@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Element Inspection Test</title>
+  </head>
+  <body>
+    <h1>Element Inspection Test</h1>
+
+    <button>Login</button>
+    <button disabled>Register</button>
+
+    <input type="email" name="email" placeholder="Enter email" />
+
+    <input
+      type="password"
+      name="password"
+      placeholder="Enter password"
+      disabled
+    />
+
+    <script>
+      fetch("/api/fail").catch(() => {});
+    </script>
+  </body>
+</html>
