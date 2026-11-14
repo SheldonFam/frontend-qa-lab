@@ -129,6 +129,13 @@ describe("Runs API Integration", () => {
         url: new URL(scenario.route, config.targetUrl).toString(),
         title: "Example Domain",
         error: null,
+        inputs: [],
+        buttons: [],
+        consoleErrors: [],
+        pageErrors: [],
+        failedRequests: [],
+        assertions: [],
+        screenshotPath: null,
       }),
     );
 

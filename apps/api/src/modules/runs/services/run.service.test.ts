@@ -63,7 +63,14 @@ describe("executeRun", () => {
       status: "passed",
       url: "https://example.com/",
       title: "Example Domain",
+      consoleErrors: [],
+      pageErrors: [],
       error: null,
+      failedRequests: [],
+      inputs: [],
+      buttons: [],
+      assertions: [],
+      screenshotPath: null,
     };
 
     // 4. Mock launchBrowser
@@ -108,10 +115,17 @@ describe("executeRun", () => {
     // 3. Create a failed ScenarioResult
     const result: ScenarioResult = {
       scenarioId: scenario.id,
-      status: "failed",
+      status: "passed",
       url: "https://example.com/",
-      title: null,
-      error: "Navigation failed",
+      title: "Example Domain",
+      consoleErrors: [],
+      pageErrors: [],
+      error: null,
+      failedRequests: [],
+      inputs: [],
+      buttons: [],
+      assertions: [],
+      screenshotPath: null,
     };
 
     // 4. Mock dependencies

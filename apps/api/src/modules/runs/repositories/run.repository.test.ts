@@ -27,7 +27,14 @@ describe("runRepository", () => {
       status: "passed",
       url: "https://example.com/about",
       title: "About Us",
+      consoleErrors: [],
+      pageErrors: [],
       error: null,
+      failedRequests: [],
+      inputs: [],
+      buttons: [],
+      assertions: [],
+      screenshotPath: null,
     };
 
     runRepository.create(testRun);
@@ -55,7 +62,14 @@ describe("runRepository", () => {
       status: "passed",
       url: "https://example.com/about",
       title: "About Us",
+      consoleErrors: [],
+      pageErrors: [],
       error: null,
+      failedRequests: [],
+      inputs: [],
+      buttons: [],
+      assertions: [],
+      screenshotPath: null,
     };
 
     const result2: ScenarioResult = {
@@ -63,7 +77,14 @@ describe("runRepository", () => {
       status: "failed",
       url: "https://example.com/contact",
       title: null,
+      consoleErrors: [],
+      pageErrors: [],
       error: "Navigation failed",
+      failedRequests: [],
+      inputs: [],
+      buttons: [],
+      assertions: [],
+      screenshotPath: null,
     };
 
     runRepository.create(testRun);
@@ -82,7 +103,14 @@ describe("runRepository", () => {
       status: "passed",
       url: "https://example.com/about",
       title: "About Us",
+      consoleErrors: [],
+      pageErrors: [],
       error: null,
+      failedRequests: [],
+      inputs: [],
+      buttons: [],
+      assertions: [],
+      screenshotPath: null,
     };
 
     expect(() => {

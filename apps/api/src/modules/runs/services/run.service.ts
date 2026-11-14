@@ -56,7 +56,7 @@ export async function executeRun(
     // Step 4: Execute scenarios one by one
     for (const scenario of run.scenarios) {
       // Execute one scenario
-      const result = await runScenario(browser, configuration, scenario);
+      const result = await runScenario(browser, configuration, scenario, runId);
 
       // Step 5: Save scenario result
       runRepository.addScenarioResult(runId, result);
