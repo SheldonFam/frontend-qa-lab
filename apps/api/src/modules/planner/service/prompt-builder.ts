@@ -33,6 +33,17 @@ function normalizeUntrustedRequirements(value: string): string {
     .slice(0, 2000);
 }
 
+function toConstrainedRequirementText(value: string): string {
+  return value
+    .normalize("NFKC")
+    .replace(/[^\x20-\x7E]/g, " ")
+    .replace(/[`$\\{}[\]<>]/g, " ")
+    .replace(/\b(system|assistant|developer|user|tool|function|instruction|policy|prompt)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 1000);
+}
+
 function encodeUntrustedPromptText(value: string): string {
   return Buffer.from(value, "utf8").toString("base64");
 }
@@ -78,7 +89,9 @@ Rules:
       viewports: input.viewports,
       requirements_b64: encodeUntrustedPromptText(
         sanitizeUntrustedPromptText(
-          normalizeUntrustedRequirements(input.requirements),
+          toConstrainedRequirementText(
+            normalizeUntrustedRequirements(input.requirements),
+          ),
         ),
       ),
     },
