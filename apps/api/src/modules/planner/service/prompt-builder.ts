@@ -15,6 +15,7 @@ export type PlannerPrompt = {
 
 function sanitizeUntrustedPromptText(value: string): string {
   return value
+    .replace(/[\\]/g, "\\\\")
     .replace(/[`]/g, "\\`")
     .replace(/[<]/g, "\\u003c")
     .replace(/[>]/g, "\\u003e");
