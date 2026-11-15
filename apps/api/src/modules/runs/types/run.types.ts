@@ -1,11 +1,13 @@
-import { ScenarioResult, TestScenario } from "./scenario.types.js";
+import type { TestPlan } from "../../planner/schemas/test-plan.schema.js";
+import type { ScenarioResult, TestScenario } from "./scenario.types.js";
 
 export type RunStatus =
   | "queued"
   | "running"
   | "completed"
   | "failed"
-  | "cancelled";
+  | "cancelled"
+  | "planning";
 
 export type TestRun = {
   id: string;
@@ -16,4 +18,6 @@ export type TestRun = {
   completedAt: string | null;
   scenarios: TestScenario[];
   results: ScenarioResult[];
+  requirements: string;
+  testPlan: TestPlan | null;
 };

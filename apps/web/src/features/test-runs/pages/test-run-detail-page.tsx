@@ -111,13 +111,97 @@ export function TestRunDetailPage() {
 
               <Text size="sm">Target URL: {run.targetUrl}</Text>
 
-              <Text size="sm">
-                Status: <Badge>{run.status}</Badge>
-              </Text>
+              <Group gap="xs">
+                <Text size="sm">Status:</Text>
+                <Badge>{run.status}</Badge>
+              </Group>
 
               <Text size="sm">Total Scenarios: {totalScenarios}</Text>
 
               <Text size="sm">Completed Results: {completedScenarios}</Text>
+            </Stack>
+          </Paper>
+
+          {/* Testing Requirements */}
+          <Paper withBorder radius="md" p="lg">
+            <Stack gap="sm">
+              <Title order={3}>Testing Requirements</Title>
+
+              <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+                {run.requirements}
+              </Text>
+            </Stack>
+          </Paper>
+
+          {/* Generated Test Plan */}
+          <Paper withBorder radius="md" p="lg">
+            <Stack gap="md">
+              <Title order={3}>Generated Test Plan</Title>
+
+              {run.testPlan ? (
+                <>
+                  <Stack gap={4}>
+                    <Text fw={600}>{run.testPlan.name}</Text>
+
+                    <Text size="sm" c="dimmed">
+                      {run.testPlan.description}
+                    </Text>
+
+                    <Text size="xs" c="dimmed">
+                      {run.testPlan.steps.length} steps generated
+                    </Text>
+                  </Stack>
+
+                  <Table.ScrollContainer minWidth={600}>
+                    <Table>
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th>Step</Table.Th>
+                          <Table.Th>Action</Table.Th>
+                          <Table.Th>Target</Table.Th>
+                          <Table.Th>Value / Expected Result</Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+
+                      <Table.Tbody>
+                        {run.testPlan.steps.map((step, index) => {
+                          const target =
+                            step.action === "assert_url"
+                              ? step.expectedResult
+                              : step.target;
+
+                          const details =
+                            step.action === "fill"
+                              ? step.value
+                              : step.action === "assert_text"
+                                ? step.expectedResult
+                                : "—";
+
+                          return (
+                            <Table.Tr key={step.id}>
+                              <Table.Td>{index + 1}</Table.Td>
+
+                              <Table.Td>
+                                <Badge variant="light">{step.action}</Badge>
+                              </Table.Td>
+
+                              <Table.Td>{target}</Table.Td>
+
+                              <Table.Td>{details}</Table.Td>
+                            </Table.Tr>
+                          );
+                        })}
+                      </Table.Tbody>
+                    </Table>
+                  </Table.ScrollContainer>
+                </>
+              ) : (
+                <Text size="sm" c="dimmed">
+                  {run.status === "failed"
+                    ? "Test plan generation failed."
+                    : "The planner is generating a test plan..."}
+                </Text>
+              )}
             </Stack>
           </Paper>
 

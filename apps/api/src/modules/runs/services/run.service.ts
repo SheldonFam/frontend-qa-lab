@@ -3,16 +3,21 @@ import type { Browser } from "playwright";
 
 import { launchBrowser } from "../../../browser/browser-manager.js";
 
+import { generateTestPlan } from "../../planner/service/planner.service.js";
+import { mockLLMClient } from "../../planner/clients/mock-llm.client.js";
+
 import { runRepository } from "../repositories/run.repository.js";
 import { generateScenarios } from "../utils/generate-scenarios.js";
 
-import type { TestConfiguration } from "../schemas/test-configuration.schema.js";
 import type { TestRun } from "../types/run.types.js";
+import type { CreateRunInput } from "../schemas/create-run.schema.js";
 
 import { runScenario } from "./scenario-runner.js";
 
 // Create a new Run
-export function createRun(configuration: TestConfiguration): TestRun {
+export function createRun(input: CreateRunInput): TestRun {
+  const { configuration, requirements } = input;
+
   const scenarios = generateScenarios(configuration);
 
   const testRun: TestRun = {
@@ -24,6 +29,8 @@ export function createRun(configuration: TestConfiguration): TestRun {
     completedAt: null,
     scenarios,
     results: [],
+    requirements,
+    testPlan: null,
   };
 
   return runRepository.create(testRun);
@@ -32,8 +39,10 @@ export function createRun(configuration: TestConfiguration): TestRun {
 // Execute an existing Run
 export async function executeRun(
   runId: string,
-  configuration: TestConfiguration,
+  input: CreateRunInput,
 ): Promise<void> {
+  const { configuration, requirements } = input;
+
   // Step 1: Find existing Run
   const run = runRepository.findById(runId);
 
@@ -41,27 +50,44 @@ export async function executeRun(
     throw new Error("Run not found");
   }
 
-  // Step 2: Update status to running
+  // Step 2: Update status to planning
   runRepository.update(runId, {
-    status: "running",
+    status: "planning",
     startedAt: new Date().toISOString(),
   });
 
   let browser: Browser | undefined;
 
   try {
-    // Step 3: Launch Browser
+    // Step 3: Generate Test Plan
+    const testPlan = await generateTestPlan(
+      {
+        targetUrl: configuration.targetUrl,
+        languages: configuration.languages,
+        routes: configuration.routes,
+        viewports: configuration.viewports,
+        requirements,
+      },
+      mockLLMClient,
+    );
+
+    // Step 4: Save Test Plan and update status
+    runRepository.update(runId, {
+      testPlan,
+      status: "running",
+    });
+
+    // Step 5: Launch Browser
     browser = await launchBrowser();
 
-    // Step 4: Execute scenarios one by one
+    // Step 6: Execute scenarios one by one
     for (const scenario of run.scenarios) {
-      // Execute one scenario
       const result = await runScenario(browser, configuration, scenario, runId);
 
-      // Step 5: Save scenario result
+      // Step 7: Save scenario result
       runRepository.addScenarioResult(runId, result);
 
-      // Step 6: Update status to completed
+      // Step 8: Update scenario status
       const updateScenarios = run.scenarios.map((item) =>
         item.id === result.scenarioId
           ? { ...item, status: result.status }
@@ -72,13 +98,14 @@ export async function executeRun(
         scenarios: updateScenarios,
       });
     }
-    // Step 7: Update Run status to completed
+
+    // Step 9: Update Run status to completed
     runRepository.update(runId, {
       status: "completed",
       completedAt: new Date().toISOString(),
     });
   } catch (error: unknown) {
-    // Step 8: Update status to failed
+    // Step 10: Update Run status to failed
     runRepository.update(runId, {
       status: "failed",
       completedAt: new Date().toISOString(),
@@ -86,7 +113,7 @@ export async function executeRun(
 
     throw error;
   } finally {
-    // Step 9: Close Browser
+    // Step 11: Close Browser
     if (browser) {
       await browser.close();
     }

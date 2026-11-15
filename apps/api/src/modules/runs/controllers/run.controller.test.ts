@@ -13,7 +13,9 @@ import {
   getAllRunsController,
   getRunController,
 } from "./run.controller.js";
+
 import type { TestConfiguration } from "../schemas/test-configuration.schema.js";
+import type { CreateRunInput } from "../schemas/create-run.schema.js";
 import type { TestRun } from "../types/run.types.js";
 
 // Mock Run Service
@@ -38,32 +40,49 @@ describe("createRunController", () => {
   });
 
   it("should return 400 when configuration is invalid", () => {
-    // 1. Create mock Request
+    // 1. Prepare invalid input
+    const invalidInput = {
+      configuration: {
+        targetUrl: "invalid-url",
+        languages: ["en"],
+        routes: ["/"],
+        viewports: [
+          {
+            name: "desktop",
+            width: 1280,
+            height: 720,
+          },
+        ],
+      },
+      requirements: "Test login functionality",
+    };
+
+    // 2. Create mock Request
     const req = {
-      body: {},
+      body: invalidInput,
     } as Request;
 
-    // 2. Create mock Response
+    // 3. Create mock Response
     const res = createMockResponse();
 
-    // 3. Execute Controller
+    // 4. Execute Controller
     createRunController(req, res, vi.fn());
 
-    // 4. Verify HTTP status
+    // 5. Verify HTTP status
     expect(res.status).toHaveBeenCalledWith(400);
 
-    // 5. Verify error response
+    // 6. Verify error response
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         success: false,
         error: expect.objectContaining({
           code: "VALIDATION_ERROR",
-          message: "Invalid test configuration",
+          message: "Invalid run input",
         }),
       }),
     );
 
-    // 6. Verify Run Service was not called
+    // 7. Verify Run Service was not called
     expect(createRun).not.toHaveBeenCalled();
     expect(executeRun).not.toHaveBeenCalled();
   });
@@ -83,7 +102,13 @@ describe("createRunController", () => {
       ],
     };
 
-    // 2. Prepare mock TestRun
+    // 2. Prepare CreateRunInput
+    const input: CreateRunInput = {
+      configuration,
+      requirements: "Test login functionality",
+    };
+
+    // 3. Prepare mock TestRun
     const mockRun: TestRun = {
       id: "run-001",
       targetUrl: configuration.targetUrl,
@@ -93,26 +118,28 @@ describe("createRunController", () => {
       completedAt: null,
       scenarios: [],
       results: [],
+      requirements: input.requirements,
+      testPlan: null,
     };
 
-    // 3. Mock Service responses
+    // 4. Mock Service responses
     vi.mocked(createRun).mockReturnValue(mockRun);
     vi.mocked(executeRun).mockResolvedValue(undefined);
 
-    // 4. Create mock Request and Response
+    // 5. Create mock Request and Response
     const req = {
-      body: configuration,
+      body: input,
     } as Request;
 
     const res = createMockResponse();
 
-    // 5. Execute Controller
+    // 6. Execute Controller
     createRunController(req, res, vi.fn());
 
-    // 6. Verify createRun
-    expect(createRun).toHaveBeenCalledWith(configuration);
+    // 7. Verify createRun
+    expect(createRun).toHaveBeenCalledWith(input);
 
-    // 7. Verify HTTP response
+    // 8. Verify HTTP response
     expect(res.status).toHaveBeenCalledWith(202);
 
     expect(res.json).toHaveBeenCalledWith({
@@ -120,49 +147,49 @@ describe("createRunController", () => {
       data: mockRun,
     });
 
-    // 8. Verify background execution
-    expect(executeRun).toHaveBeenCalledWith(mockRun.id, configuration);
+    // 9. Verify background execution
+    expect(executeRun).toHaveBeenCalledWith(mockRun.id, input);
+  });
+});
+
+describe("getRunController", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  describe("getRunController", () => {
-    beforeEach(() => {
-      vi.clearAllMocks();
-    });
+  it("should return 404 when run does not exist", () => {
+    // 1. Mock getRun
+    vi.mocked(getRun).mockReturnValue(undefined);
 
-    it("should return 404 when run does not exist", () => {
-      // 1. Mock getRun
-      vi.mocked(getRun).mockReturnValue(undefined);
+    // 2. Create mock Request
+    const req = {
+      params: {
+        id: "invalid-id",
+      },
+    } as Request<{ id: string }>;
 
-      // 2. Create mock Request
-      const req = {
-        params: {
-          id: "invalid-id",
-        },
-      } as Request<{ id: string }>;
+    // 3. Create mock Response
+    const res = createMockResponse();
 
-      // 3. Create mock Response
-      const res = createMockResponse();
+    // 4. Execute Controller
+    getRunController(req, res, vi.fn());
 
-      // 4. Execute Controller
-      getRunController(req, res, vi.fn());
+    // 5. Verify getRun
+    expect(getRun).toHaveBeenCalledWith("invalid-id");
 
-      // 5. Verify getRun
-      expect(getRun).toHaveBeenCalledWith("invalid-id");
+    // 6. Verify HTTP status
+    expect(res.status).toHaveBeenCalledWith(404);
 
-      // 6. Verify HTTP status
-      expect(res.status).toHaveBeenCalledWith(404);
-
-      // 7. Verify error response
-      expect(res.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          success: false,
-          error: expect.objectContaining({
-            code: "RUN_NOT_FOUND",
-            message: "Test run not found",
-          }),
+    // 7. Verify error response
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: false,
+        error: expect.objectContaining({
+          code: "RUN_NOT_FOUND",
+          message: "Test run not found",
         }),
-      );
-    });
+      }),
+    );
   });
 
   it("should return 200 when run exists", () => {
@@ -176,6 +203,8 @@ describe("createRunController", () => {
       completedAt: new Date().toISOString(),
       scenarios: [],
       results: [],
+      requirements: "Test login functionality",
+      testPlan: null,
     };
 
     // 2. Mock getRun
@@ -206,48 +235,50 @@ describe("createRunController", () => {
       data: mockRun,
     });
   });
+});
 
-  describe("getAllRunsController", () => {
-    beforeEach(() => {
-      vi.clearAllMocks();
-    });
+describe("getAllRunsController", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
-    it("should return 200 with all runs", () => {
-      // 1. Prepare mock TestRun
-      const mockRun: TestRun = {
-        id: "run-001",
-        targetUrl: "https://example.com",
-        status: "completed",
-        createdAt: new Date().toISOString(),
-        startedAt: new Date().toISOString(),
-        completedAt: new Date().toISOString(),
-        scenarios: [],
-        results: [],
-      };
+  it("should return 200 with all runs", () => {
+    // 1. Prepare mock TestRun
+    const mockRun: TestRun = {
+      id: "run-001",
+      targetUrl: "https://example.com",
+      status: "completed",
+      createdAt: new Date().toISOString(),
+      startedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
+      scenarios: [],
+      results: [],
+      requirements: "Test login functionality",
+      testPlan: null,
+    };
 
-      const mockRuns: TestRun[] = [mockRun];
+    const mockRuns: TestRun[] = [mockRun];
 
-      // 2. Mock getAllRuns
-      vi.mocked(getAllRuns).mockReturnValue(mockRuns);
+    // 2. Mock getAllRuns
+    vi.mocked(getAllRuns).mockReturnValue(mockRuns);
 
-      // 3. Create mock Request and Response
-      const req = {} as Request;
-      const res = createMockResponse();
+    // 3. Create mock Request and Response
+    const req = {} as Request;
+    const res = createMockResponse();
 
-      // 4. Execute Controller
-      getAllRunsController(req, res, vi.fn());
+    // 4. Execute Controller
+    getAllRunsController(req, res, vi.fn());
 
-      // 5. Verify Service
-      expect(getAllRuns).toHaveBeenCalledOnce();
+    // 5. Verify Service
+    expect(getAllRuns).toHaveBeenCalledOnce();
 
-      // 6. Verify HTTP status
-      expect(res.status).toHaveBeenCalledWith(200);
+    // 6. Verify HTTP status
+    expect(res.status).toHaveBeenCalledWith(200);
 
-      // 7. Verify response
-      expect(res.json).toHaveBeenCalledWith({
-        success: true,
-        data: mockRuns,
-      });
+    // 7. Verify response
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      data: mockRuns,
     });
   });
 });

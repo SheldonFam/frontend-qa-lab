@@ -13,6 +13,7 @@ const statusColors: Record<Status, string> = {
 
   // Run Status
   queued: "yellow",
+  planning: "violet",
   running: "blue",
   completed: "teal",
   failed: "red",

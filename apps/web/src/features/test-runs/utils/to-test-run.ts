@@ -12,10 +12,8 @@ export function toTestRun(apiRun: ApiTestRun): TestRun {
     (scenario) => scenario.status === "failed",
   ).length;
 
-  // Convert Backend "completed" into UI "passed" or "failed"
   const status: TestRun["status"] = apiRun.status;
 
-  // Calculate execution duration in seconds
   const duration =
     apiRun.startedAt && apiRun.completedAt
       ? Math.round(
@@ -30,6 +28,8 @@ export function toTestRun(apiRun: ApiTestRun): TestRun {
     name: new URL(apiRun.targetUrl).hostname,
     targetUrl: apiRun.targetUrl,
     status,
+    requirements: apiRun.requirements,
+    testPlan: apiRun.testPlan,
     totalScenarios: scenarios.length,
     passedScenarios,
     failedScenarios,

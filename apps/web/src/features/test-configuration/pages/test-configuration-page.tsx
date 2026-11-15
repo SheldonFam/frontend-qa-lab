@@ -1,6 +1,14 @@
 import { useState } from "react";
 
-import { Alert, Button, Code, Group, Stack, Text } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  Code,
+  Group,
+  Stack,
+  Text,
+  Textarea,
+} from "@mantine/core";
 
 import { Page } from "../../../components/layout/page";
 
@@ -22,6 +30,8 @@ export function TestConfigurationPage() {
     null,
   );
 
+  const [requirements, setRequirements] = useState("");
+
   const createTestRunMutation = useCreateTestRun();
 
   const navigate = useNavigate();
@@ -42,11 +52,14 @@ export function TestConfigurationPage() {
       return;
     }
 
-    createTestRunMutation.mutate(configuration, {
-      onSuccess: (run) => {
-        navigate(`/test-runs/${run.id}`);
+    createTestRunMutation.mutate(
+      { configuration, requirements: requirements.trim() },
+      {
+        onSuccess: (run) => {
+          navigate(`/test-runs/${run.id}`);
+        },
       },
-    });
+    );
   }
 
   return (
@@ -60,13 +73,26 @@ export function TestConfigurationPage() {
       {/* Step 2: Scenario Preview */}
       <ScenarioPreview scenarios={scenarios} />
 
+      {configuration && (
+        <Textarea
+          label="Testing Requirements"
+          description="Describe what you want the test planner to test."
+          placeholder="e.g. Test login with valid and invalid credentials."
+          minRows={4}
+          autosize
+          required
+          value={requirements}
+          onChange={(event) => setRequirements(event.currentTarget.value)}
+        />
+      )}
+
       {/* Step 3: Start Test Run */}
       {configuration && (
         <Group justify="flex-end">
           <Button
             onClick={handleStartTestRun}
             loading={createTestRunMutation.isPending}
-            disabled={createTestRunMutation.isSuccess}
+            disabled={createTestRunMutation.isSuccess || !requirements.trim()}
           >
             Start Test Run
           </Button>
