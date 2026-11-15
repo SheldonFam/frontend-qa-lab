@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 
-import { testConfigurationSchema } from "../schemas/test-configuration.schema.js";
+import { createRunInputSchema } from "../schemas/create-run.schema.js";
 import {
   createRun,
   executeRun,
@@ -9,14 +9,14 @@ import {
 } from "../services/run.service.js";
 
 export const createRunController: RequestHandler = (req, res) => {
-  const result = testConfigurationSchema.safeParse(req.body);
+  const result = createRunInputSchema.safeParse(req.body);
 
   if (!result.success) {
     res.status(400).json({
       success: false,
       error: {
         code: "VALIDATION_ERROR",
-        message: "Invalid test configuration",
+        message: "Invalid run input",
         details: result.error.issues,
       },
     });

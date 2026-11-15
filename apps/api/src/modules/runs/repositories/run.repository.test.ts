@@ -20,6 +20,8 @@ describe("runRepository", () => {
       completedAt: null,
       scenarios: [],
       results: [],
+      requirements: "Test website functionality",
+      testPlan: null,
     };
 
     const result: ScenarioResult = {
@@ -39,6 +41,7 @@ describe("runRepository", () => {
 
     runRepository.create(testRun);
     runRepository.addScenarioResult("run-001", result);
+
     const run = runRepository.findById("run-001");
 
     expect(run?.results).toHaveLength(1);
@@ -55,6 +58,8 @@ describe("runRepository", () => {
       completedAt: null,
       scenarios: [],
       results: [],
+      requirements: "Test website functionality",
+      testPlan: null,
     };
 
     const result1: ScenarioResult = {
@@ -95,6 +100,7 @@ describe("runRepository", () => {
     const run = runRepository.findById("run-001");
 
     expect(run?.results).toHaveLength(2);
+    expect(run?.results).toEqual([result1, result2]);
   });
 
   it("should throw an error when run does not exist", () => {

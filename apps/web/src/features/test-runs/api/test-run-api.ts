@@ -1,6 +1,5 @@
-import type { TestConfiguration } from "../../test-configuration/types/test-configuration";
-
 import type {
+  ApiCreateTestRunInput,
   ApiErrorResponse,
   ApiSuccessResponse,
   ApiTestRun,
@@ -10,14 +9,14 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
 
 export async function createTestRun(
-  configuration: TestConfiguration,
+  input: ApiCreateTestRunInput,
 ): Promise<ApiTestRun> {
   const response = await fetch(`${API_BASE_URL}/runs`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(configuration),
+    body: JSON.stringify(input),
   });
 
   const body = (await response.json()) as

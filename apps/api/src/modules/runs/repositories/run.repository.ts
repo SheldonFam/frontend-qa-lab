@@ -20,7 +20,10 @@ export const runRepository = {
   update(
     id: string,
     updates: Partial<
-      Pick<TestRun, "status" | "startedAt" | "completedAt" | "scenarios">
+      Pick<
+        TestRun,
+        "status" | "startedAt" | "completedAt" | "scenarios" | "testPlan"
+      >
     >,
   ): TestRun | undefined {
     const run = runs.find((item) => item.id === id);
