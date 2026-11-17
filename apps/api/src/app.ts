@@ -4,8 +4,12 @@ import { env } from "./config/env.js";
 import { notFoundHandler } from "./middleware/not-found-handler.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import runRoutes from "./modules/runs/routes/run.routes.js";
+import { registerAgentTools } from "./modules/agent/register-agent-tools.js";
 
 const app = express();
+
+// Register Agent Tools
+registerAgentTools();
 
 app.use(
   cors({

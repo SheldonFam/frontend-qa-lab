@@ -16,32 +16,38 @@ describe("buildPlannerPrompt", () => {
 
     const result = buildPlannerPrompt(input);
 
-    expect(result.userPrompt).toContain(input.targetUrl);
-    expect(result.userPrompt).toContain(input.requirements);
+    // Target URL
+    expect(result.userPrompt).toContain(
+      Buffer.from(input.targetUrl).toString("base64"),
+    );
+
+    // Requirements
+    expect(result.userPrompt).toContain(
+      Buffer.from(input.requirements).toString("base64"),
+    );
 
     // Languages
-    expect(result.userPrompt).toContain("English");
-    expect(result.userPrompt).toContain("Malay");
+    for (const language of input.languages) {
+      expect(result.userPrompt).toContain(
+        Buffer.from(language).toString("base64"),
+      );
+    }
 
     // Routes
-    expect(result.userPrompt).toContain("/login");
-    expect(result.userPrompt).toContain("/register");
+    for (const route of input.routes) {
+      expect(result.userPrompt).toContain(
+        Buffer.from(route).toString("base64"),
+      );
+    }
 
     // Viewports
-    expect(result.userPrompt).toContain("Desktop (1920x1080)");
-    expect(result.userPrompt).toContain("Mobile (375x812)");
+    expect(result.userPrompt).toContain('"name": "Desktop"');
+    expect(result.userPrompt).toContain('"width": 1920');
+    expect(result.userPrompt).toContain('"height": 1080');
 
-    // System Prompt
-    expect(result.systemPrompt).toContain("Do not execute browser actions");
-
-    expect(result.userPrompt).toContain("English");
-    expect(result.userPrompt).toContain("Malay");
-
-    expect(result.userPrompt).toContain("/login");
-    expect(result.userPrompt).toContain("/register");
-
-    expect(result.userPrompt).toContain("Desktop (1920x1080)");
-    expect(result.userPrompt).toContain("Mobile (375x812)");
+    expect(result.userPrompt).toContain('"name": "Mobile"');
+    expect(result.userPrompt).toContain('"width": 375');
+    expect(result.userPrompt).toContain('"height": 812');
   });
 
   it("should include planner role and rules in system prompt", () => {
@@ -55,10 +61,14 @@ describe("buildPlannerPrompt", () => {
 
     const result = buildPlannerPrompt(input);
 
-    expect(result.systemPrompt).toContain("expert Frontend QA Engineer");
+    expect(result.systemPrompt).toContain(
+      "expert QA Test Planner specializing in frontend applications",
+    );
+
     expect(result.systemPrompt).toContain(
       "Do not invent website functionality",
     );
+
     expect(result.systemPrompt).toContain("Do not execute browser actions");
   });
 });
