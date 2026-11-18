@@ -206,4 +206,143 @@ describe("executeRun", () => {
 
     expect(updatedRun?.startedAt).not.toBeNull();
   });
+
+  it("should pass scenario-specific test plans to the agent", async () => {
+    const scopedInput: CreateRunInput = {
+      configuration: {
+        targetUrl: "https://example.com",
+        languages: ["en", "ms"],
+        routes: ["/login", "/dashboard"],
+        viewports: [
+          {
+            name: "desktop",
+            width: 1280,
+            height: 720,
+          },
+        ],
+      },
+      requirements: "Test login and dashboard functionality",
+    };
+
+    const run = createRun(scopedInput);
+
+    const browser = {
+      close: vi.fn().mockResolvedValue(undefined),
+    } as unknown as Browser;
+
+    // Generate a TestPlan containing four scope types.
+    vi.spyOn(mockLLMClient, "generate").mockResolvedValueOnce({
+      name: "Scoped Test Plan",
+      description: "Verify scenario-specific test steps",
+      steps: [
+        {
+          action: "assert_visible",
+          target: "global-header",
+        },
+        {
+          action: "assert_visible",
+          target: "login-form",
+          scope: {
+            routes: ["/login"],
+          },
+        },
+        {
+          action: "assert_visible",
+          target: "english-banner",
+          scope: {
+            languages: ["en"],
+          },
+        },
+        {
+          action: "assert_visible",
+          target: "ms-dashboard-banner",
+          scope: {
+            routes: ["/dashboard"],
+            languages: ["ms"],
+          },
+        },
+      ],
+    });
+
+    vi.mocked(launchBrowser).mockResolvedValue(browser);
+
+    // Return a result for each scenario being executed.
+    vi.mocked(runAgentScenario).mockImplementation(
+      async (_browser, _configuration, scenario) => ({
+        scenarioId: scenario.id,
+        status: "passed",
+        url: `https://example.com${scenario.route}`,
+        title: "Example Domain",
+        consoleErrors: [],
+        pageErrors: [],
+        failedRequests: [],
+        buttons: [],
+        inputs: [],
+        error: null,
+        assertions: [],
+        screenshotPath: null,
+      }),
+    );
+
+    await executeRun(run.id, scopedInput);
+
+    const calls = vi.mocked(runAgentScenario).mock.calls;
+
+    expect(calls).toHaveLength(4);
+
+    // Find the TestPlan passed to the Agent for a specific scenario.
+    const getTargets = (route: string, language: string) => {
+      const call = calls.find(
+        (call) => call[2].route === route && call[2].language === language,
+      );
+
+      expect(call).toBeDefined();
+
+      return call![3].steps.map((step) => {
+        switch (step.action) {
+          case "navigate":
+          case "click":
+          case "fill":
+          case "assert_visible":
+          case "assert_text":
+            return step.target;
+
+          case "assert_url":
+            return step.expectedResult;
+        }
+      });
+    };
+
+    // en + /login:
+    // Global + route-specific + language-specific
+    expect(getTargets("/login", "en")).toEqual([
+      "global-header",
+      "login-form",
+      "english-banner",
+    ]);
+
+    // en + /dashboard:
+    // Global + language-specific
+    expect(getTargets("/dashboard", "en")).toEqual([
+      "global-header",
+      "english-banner",
+    ]);
+
+    // ms + /login:
+    // Global + route-specific
+    expect(getTargets("/login", "ms")).toEqual(["global-header", "login-form"]);
+
+    // ms + /dashboard:
+    // Global + route-specific + language-specific
+    expect(getTargets("/dashboard", "ms")).toEqual([
+      "global-header",
+      "ms-dashboard-banner",
+    ]);
+
+    const updatedRun = runRepository.findById(run.id);
+
+    expect(updatedRun?.status).toBe("completed");
+    expect(updatedRun?.results).toHaveLength(4);
+    expect(browser.close).toHaveBeenCalledOnce();
+  });
 });

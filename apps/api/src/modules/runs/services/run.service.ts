@@ -7,6 +7,7 @@ import type { AgentClient } from "../../agent/clients/agent-client.js";
 
 import { generateTestPlan } from "../../planner/service/planner.service.js";
 import { mockLLMClient } from "../../planner/clients/mock-llm.client.js";
+import { mapTestPlanToScenario } from "../../planner/service/test-plan-mapper.js";
 
 import { runRepository } from "../repositories/run.repository.js";
 import { generateScenarios } from "../utils/generate-scenarios.js";
@@ -60,7 +61,7 @@ export async function executeRun(
   let browser: Browser | undefined;
 
   try {
-    // Step 1: Generate Test Plan
+    // Step 1: Generate Global Test Plan
     const testPlan = await generateTestPlan(
       {
         targetUrl: configuration.targetUrl,
@@ -72,7 +73,7 @@ export async function executeRun(
       mockLLMClient,
     );
 
-    // Step 2: Save Test Plan
+    // Step 2: Save Global Test Plan
     runRepository.update(runId, {
       testPlan,
       status: "running",
@@ -83,11 +84,14 @@ export async function executeRun(
 
     // Step 4: Execute scenarios using Agent
     for (const scenario of run.scenarios) {
+      // Map the global Test Plan to the current scenario
+      const scenarioTestPlan = mapTestPlanToScenario(testPlan, scenario);
+
       const result = await runAgentScenario(
         browser,
         configuration,
         scenario,
-        testPlan,
+        scenarioTestPlan,
         runId,
         agentClient,
       );
