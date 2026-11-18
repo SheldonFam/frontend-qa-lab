@@ -1,5 +1,3 @@
-export interface Viewport {
-  name: string;
-  width: number;
-  height: number;
-}
+import type { ApiViewport } from "../../../types/api";
+
+export type Viewport = ApiViewport;

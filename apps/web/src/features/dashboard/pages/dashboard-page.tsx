@@ -15,9 +15,7 @@ import { useTestRuns } from "../../test-runs/hooks/use-test-runs";
 export function DashboardPage() {
   const { data: testRuns, isPending, isError, error, refetch } = useTestRuns();
 
-  const recentTestRuns = testRuns
-    ?.toSorted((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 5);
+  const recentTestRuns = testRuns?.slice(0, 5);
 
   return (
     <Page
@@ -74,7 +72,7 @@ export function DashboardPage() {
                 description="Create your first test run to see recent executions here."
               />
             ) : (
-              <TestRunTable filteredResults={recentTestRuns} />
+              <TestRunTable testRuns={recentTestRuns} />
             )}
           </Stack>
         </>

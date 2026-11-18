@@ -1,18 +1,10 @@
-import type { ApiTestRun } from "../types/test-run-api";
+import type { ApiTestRun } from "../../../types/api";
 import type { TestRun } from "../types/test-run";
+import { getScenarioCounts } from "./get-scenario-counts";
 
 export function toTestRun(apiRun: ApiTestRun): TestRun {
   const scenarios = apiRun.scenarios;
-
-  const passedScenarios = scenarios.filter(
-    (scenario) => scenario.status === "passed",
-  ).length;
-
-  const failedScenarios = scenarios.filter(
-    (scenario) => scenario.status === "failed",
-  ).length;
-
-  const status: TestRun["status"] = apiRun.status;
+  const counts = getScenarioCounts(scenarios);
 
   const duration =
     apiRun.startedAt && apiRun.completedAt
@@ -27,13 +19,10 @@ export function toTestRun(apiRun: ApiTestRun): TestRun {
     id: apiRun.id,
     name: new URL(apiRun.targetUrl).hostname,
     targetUrl: apiRun.targetUrl,
-    status,
-    requirements: apiRun.requirements,
-    testPlan: apiRun.testPlan,
-    totalScenarios: scenarios.length,
-    passedScenarios,
-    failedScenarios,
-    skippedScenarios: 0,
+    status: apiRun.status,
+    totalScenarios: counts.total,
+    passedScenarios: counts.passed,
+    failedScenarios: counts.failed,
     languages: [...new Set(scenarios.map((scenario) => scenario.language))],
     createdAt: apiRun.createdAt,
     startedAt: apiRun.startedAt,
