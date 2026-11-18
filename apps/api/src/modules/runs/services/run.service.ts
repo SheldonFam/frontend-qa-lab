@@ -12,7 +12,7 @@ import { generateScenarios } from "../utils/generate-scenarios.js";
 import type { TestRun } from "../types/run.types.js";
 import type { CreateRunInput } from "../schemas/create-run.schema.js";
 
-import { runScenario } from "./scenario-runner.js";
+import { runAgentScenario } from "../../agent/runtime/agent-scenario-runner.js";
 
 // Create a new Run
 export function createRun(input: CreateRunInput): TestRun {
@@ -43,14 +43,12 @@ export async function executeRun(
 ): Promise<void> {
   const { configuration, requirements } = input;
 
-  // Step 1: Find existing Run
   const run = runRepository.findById(runId);
 
   if (!run) {
     throw new Error("Run not found");
   }
 
-  // Step 2: Update status to planning
   runRepository.update(runId, {
     status: "planning",
     startedAt: new Date().toISOString(),
@@ -59,7 +57,7 @@ export async function executeRun(
   let browser: Browser | undefined;
 
   try {
-    // Step 3: Generate Test Plan
+    // Step 1: Generate Test Plan
     const testPlan = await generateTestPlan(
       {
         targetUrl: configuration.targetUrl,
@@ -71,41 +69,53 @@ export async function executeRun(
       mockLLMClient,
     );
 
-    // Step 4: Save Test Plan and update status
+    // Step 2: Save Test Plan
     runRepository.update(runId, {
       testPlan,
       status: "running",
     });
 
-    // Step 5: Launch Browser
+    // Step 3: Launch Browser
     browser = await launchBrowser();
 
-    // Step 6: Execute scenarios one by one
+    // Step 4: Execute scenarios using Agent
     for (const scenario of run.scenarios) {
-      const result = await runScenario(browser, configuration, scenario, runId);
+      const result = await runAgentScenario(
+        browser,
+        configuration,
+        scenario,
+        testPlan,
+        runId,
+      );
 
-      // Step 7: Save scenario result
+      // Step 5: Save scenario result
       runRepository.addScenarioResult(runId, result);
 
-      // Step 8: Update scenario status
-      const updateScenarios = run.scenarios.map((item) =>
+      // Step 6: Update scenario status
+      // Read the latest Run to avoid overwriting previous scenario updates.
+      const currentRun = runRepository.findById(runId);
+
+      if (!currentRun) {
+        throw new Error("Run not found while updating scenario status");
+      }
+
+      const updatedScenarios = currentRun.scenarios.map((item) =>
         item.id === result.scenarioId
           ? { ...item, status: result.status }
           : item,
       );
 
       runRepository.update(runId, {
-        scenarios: updateScenarios,
+        scenarios: updatedScenarios,
       });
     }
 
-    // Step 9: Update Run status to completed
+    // Step 7: Update Run status
     runRepository.update(runId, {
       status: "completed",
       completedAt: new Date().toISOString(),
     });
   } catch (error: unknown) {
-    // Step 10: Update Run status to failed
     runRepository.update(runId, {
       status: "failed",
       completedAt: new Date().toISOString(),
@@ -113,7 +123,7 @@ export async function executeRun(
 
     throw error;
   } finally {
-    // Step 11: Close Browser
+    // Step 8: Close Browser
     if (browser) {
       await browser.close();
     }
