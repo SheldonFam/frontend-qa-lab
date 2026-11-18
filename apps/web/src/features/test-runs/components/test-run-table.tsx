@@ -15,7 +15,7 @@ import type { TestRun } from "../types/test-run";
 import { Link } from "react-router";
 
 interface TestRunTableProps {
-  filteredResults: TestRun[];
+  testRuns: TestRun[];
 }
 
 function formatDuration(testRun: TestRun): string {
@@ -56,12 +56,10 @@ const tableColumns = [
   "Duration",
 ];
 
-export function TestRunTable({ filteredResults }: TestRunTableProps) {
-  const rows = filteredResults.map((testRun) => {
+export function TestRunTable({ testRuns }: TestRunTableProps) {
+  const rows = testRuns.map((testRun) => {
     const completedScenarios =
-      testRun.passedScenarios +
-      testRun.failedScenarios +
-      testRun.skippedScenarios;
+      testRun.passedScenarios + testRun.failedScenarios;
 
     const progress =
       testRun.totalScenarios > 0
@@ -115,7 +113,7 @@ export function TestRunTable({ filteredResults }: TestRunTableProps) {
 
             <Text size="xs" c="dimmed">
               {testRun.passedScenarios} passed · {testRun.failedScenarios}{" "}
-              failed · {testRun.skippedScenarios} skipped
+              failed
             </Text>
           </Stack>
         </Table.Td>
@@ -172,7 +170,7 @@ export function TestRunTable({ filteredResults }: TestRunTableProps) {
           </Table.Thead>
 
           <Table.Tbody>
-            {filteredResults.length === 0 ? (
+            {testRuns.length === 0 ? (
               <Table.Tr>
                 <Table.Td colSpan={tableColumns.length}>
                   <Box py={40}>

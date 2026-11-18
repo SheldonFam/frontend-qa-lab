@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { Container, Group, Stack, Text, Title } from "@mantine/core";
 
+import { APP_NAME } from "../../constants/app";
+
 interface PageProps {
   title: string;
   description?: string;
@@ -15,7 +17,7 @@ export function Page({ title, description, actions, children }: PageProps) {
   return (
     <Container size="xl" py={{ base: "md", sm: "xl" }}>
       {/* Browser tab title. React 19 moves this <title> into <head> for us. */}
-      <title>{`${title} · Frontend QA Lab`}</title>
+      <title>{`${title} · ${APP_NAME}`}</title>
 
       <Stack gap="xl">
         <Group justify="space-between" align="flex-start" gap="md">

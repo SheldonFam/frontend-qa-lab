@@ -1,5 +1,3 @@
-import type { TestConfiguration } from "../../test-configuration/types/test-configuration";
-
 // Run Status
 export type ApiRunStatus =
   | "queued"
@@ -80,9 +78,17 @@ export interface ApiTestPlan {
   steps: ApiTestPlanStep[];
 }
 
+// Test Configuration
+export interface ApiTestConfiguration {
+  targetUrl: string;
+  languages: string[];
+  routes: string[];
+  viewports: ApiViewport[];
+}
+
 // Create Run Request
 export interface ApiCreateTestRunInput {
-  configuration: TestConfiguration;
+  configuration: ApiTestConfiguration;
   requirements: string;
 }
 

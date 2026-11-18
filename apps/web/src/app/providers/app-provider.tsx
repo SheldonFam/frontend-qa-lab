@@ -44,8 +44,9 @@ const cssVariablesResolver: CSSVariablesResolver = () => ({
   },
 });
 
+const queryClient = new QueryClient();
+
 export function AppProviders({ children }: AppProvidersProps) {
-  const queryClient = new QueryClient();
   return (
     <QueryClientProvider client={queryClient}>
       <MantineProvider

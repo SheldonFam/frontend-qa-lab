@@ -1,9 +1,6 @@
+import type { ApiTestConfiguration } from "../../../types/api";
 import type { LanguageCode } from "../constants/languages";
-import type { Viewport } from "./viewport";
 
-export interface TestConfiguration {
-  targetUrl: string;
+export interface TestConfiguration extends ApiTestConfiguration {
   languages: LanguageCode[];
-  routes: string[];
-  viewports: Viewport[];
 }

@@ -1,14 +1,6 @@
 import { useState } from "react";
 
-import {
-  Alert,
-  Button,
-  Code,
-  Group,
-  Stack,
-  Text,
-  Textarea,
-} from "@mantine/core";
+import { Alert, Button, Group, Textarea } from "@mantine/core";
 
 import { Page } from "../../../components/layout/page";
 
@@ -37,13 +29,22 @@ export function TestConfigurationPage() {
   const navigate = useNavigate();
 
   // Step 1: Generate local scenarios for preview
-  function handleGenerate(configuration: TestConfiguration) {
-    setConfiguration(configuration);
+  function handleGenerate(newConfiguration: TestConfiguration) {
+    setConfiguration(newConfiguration);
 
-    setScenarios(generateScenarios(configuration));
+    setScenarios(generateScenarios(newConfiguration));
 
     // Reset previous API mutation state
     createTestRunMutation.reset();
+  }
+
+  function handleFormChange() {
+    if (!configuration) {
+      return;
+    }
+
+    setConfiguration(null);
+    setScenarios([]);
   }
 
   // Step 2: Start the actual Backend Test Run
@@ -68,7 +69,10 @@ export function TestConfigurationPage() {
       description="Configure your frontend testing scenarios."
     >
       {/* Step 1: Configuration Form */}
-      <TestConfigurationForm onSubmit={handleGenerate} />
+      <TestConfigurationForm
+        onSubmit={handleGenerate}
+        onChange={handleFormChange}
+      />
 
       {/* Step 2: Scenario Preview */}
       <ScenarioPreview scenarios={scenarios} />
@@ -103,25 +107,6 @@ export function TestConfigurationPage() {
       {createTestRunMutation.isError && (
         <Alert color="red" title="Failed to create test run">
           {createTestRunMutation.error.message}
-        </Alert>
-      )}
-
-      {/* API Success */}
-      {createTestRunMutation.isSuccess && (
-        <Alert color="green" title="Test run created successfully">
-          <Stack gap="xs">
-            <Text size="sm">
-              Your test run has been accepted by the Backend.
-            </Text>
-
-            <Text size="sm">
-              Run ID: <Code>{createTestRunMutation.data.id}</Code>
-            </Text>
-
-            <Text size="sm">
-              Initial status: <Code>{createTestRunMutation.data.status}</Code>
-            </Text>
-          </Stack>
         </Alert>
       )}
     </Page>
