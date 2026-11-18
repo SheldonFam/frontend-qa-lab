@@ -1,10 +1,12 @@
 import { Button, Center, Stack, Text, Title } from "@mantine/core";
 import { Link } from "react-router";
 
+import { APP_NAME } from "../../constants/app";
+
 export function NotFoundPage() {
   return (
     <Center mih="60vh">
-      <title>Page Not Found · Frontend QA Lab</title>
+      <title>{`Page Not Found · ${APP_NAME}`}</title>
 
       <Stack align="center" gap="sm">
         <Text fz={34} fw={700} lh={1.3}>

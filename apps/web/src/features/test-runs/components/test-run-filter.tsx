@@ -13,6 +13,7 @@ interface TestRunFilterProps {
 const filterChips: { label: string; value: TestRunStatusFilter }[] = [
   { label: "All", value: "all" },
   { label: "Queued", value: "queued" },
+  { label: "Planning", value: "planning" },
   { label: "Running", value: "running" },
   { label: "Completed", value: "completed" },
   { label: "Failed", value: "failed" },

@@ -1,4 +1,6 @@
-import { Box, Burger, Group, Text } from "@mantine/core";
+import { Burger, Group, Text } from "@mantine/core";
+
+import { APP_NAME } from "../../constants/app";
 
 interface AppHeaderProps {
   menuOpened: boolean;
@@ -9,23 +11,16 @@ interface AppHeaderProps {
 // the sidebar is always visible, so this bar is hidden.
 export function AppHeader({ menuOpened, onMenuClick }: AppHeaderProps) {
   return (
-    <Box
-      component="header"
-      hiddenFrom="md"
-      bg="var(--mantine-color-body)"
-      style={{ borderBottom: "1px solid var(--app-border)" }}
-    >
-      <Group h={64} px="md" gap="md" wrap="nowrap">
-        <Burger
-          opened={menuOpened}
-          onClick={onMenuClick}
-          size="sm"
-          aria-label="Open navigation"
-          aria-expanded={menuOpened}
-        />
+    <Group h="100%" px="md" gap="md" wrap="nowrap">
+      <Burger
+        opened={menuOpened}
+        onClick={onMenuClick}
+        size="sm"
+        aria-label="Open navigation"
+        aria-expanded={menuOpened}
+      />
 
-        <Text fw={700}>Frontend QA Lab</Text>
-      </Group>
-    </Box>
+      <Text fw={700}>{APP_NAME}</Text>
+    </Group>
   );
 }

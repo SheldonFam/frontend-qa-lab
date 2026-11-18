@@ -1,4 +1,4 @@
-import { Center, Stack, Text, Title } from "@mantine/core";
+import { Center, EmptyState as MantineEmptyState } from "@mantine/core";
 
 interface EmptyStateProps {
   title: string;
@@ -8,15 +8,13 @@ interface EmptyStateProps {
 export function EmptyState({ title, description }: EmptyStateProps) {
   return (
     <Center mih={200}>
-      <Stack align="center" gap="xs">
-        <Title order={3} size="h5">
-          {title}
-        </Title>
+      <MantineEmptyState size="sm">
+        <MantineEmptyState.Title order={3}>{title}</MantineEmptyState.Title>
 
-        <Text size="sm" c="dimmed" ta="center">
+        <MantineEmptyState.Description>
           {description}
-        </Text>
-      </Stack>
+        </MantineEmptyState.Description>
+      </MantineEmptyState>
     </Center>
   );
 }

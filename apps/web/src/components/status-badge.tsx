@@ -1,15 +1,13 @@
 import { Badge } from "@mantine/core";
 
-import type { TestScenarioStatus } from "../features/test-configuration/types/test-scenario";
-import type { TestRunStatus } from "../features/test-runs/types/test-run";
+import type { ApiRunStatus, ApiScenarioStatus } from "../types/api";
 
-type Status = TestScenarioStatus | TestRunStatus;
+type Status = ApiScenarioStatus | ApiRunStatus;
 
 const statusColors: Record<Status, string> = {
   // Scenario Status
   pending: "gray",
   passed: "green",
-  skipped: "gray",
 
   // Run Status
   queued: "yellow",

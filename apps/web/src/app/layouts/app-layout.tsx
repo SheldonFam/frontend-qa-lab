@@ -1,54 +1,60 @@
-import { Box, Drawer, Flex } from "@mantine/core";
+import { AppShell, Drawer, useMantineTheme } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { Outlet } from "react-router";
 
 import { AppSidebar } from "../../components/layout/app-sidebar";
 import { AppHeader } from "../../components/layout/app-header";
 
+const SIDEBAR_WIDTH = 260;
+const HEADER_HEIGHT = 64;
+
 export function AppLayout() {
   const [opened, handlers] = useDisclosure(false);
 
-  const isMobile = useMediaQuery("(max-width: 991px)");
+  const theme = useMantineTheme();
+
+  const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.md})`);
 
   // The drawer only exists on small screens, so treat it as closed on desktop.
   const drawerOpened = isMobile && opened;
 
   return (
-    <Flex h="100dvh" bg="var(--app-page-bg)">
+    <AppShell
+      header={{ height: { base: HEADER_HEIGHT, md: 0 } }}
+      navbar={{
+        width: SIDEBAR_WIDTH,
+        breakpoint: "md",
+        collapsed: { mobile: true },
+      }}
+    >
+      {/* Top bar, mobile and tablet only */}
+      <AppShell.Header hiddenFrom="md">
+        <AppHeader menuOpened={drawerOpened} onMenuClick={handlers.open} />
+      </AppShell.Header>
+
       {/* Desktop Sidebar */}
-      <Box
-        w={260}
-        flex="0 0 260px"
-        bg="var(--mantine-color-body)"
-        visibleFrom="md"
-        style={{ borderRight: "1px solid var(--app-border)" }}
-      >
+      <AppShell.Navbar visibleFrom="md" aria-label="Main">
         <AppSidebar />
-      </Box>
+      </AppShell.Navbar>
 
       {/* Main Content */}
-      <Flex flex={1} direction="column" miw={0}>
-        {/* Top bar, mobile and tablet only */}
-        <AppHeader menuOpened={drawerOpened} onMenuClick={handlers.open} />
-
-        <Box
-          component="main"
-          flex={1}
-          miw={0}
-          mih={0}
-          style={{ overflow: "auto" }}
-        >
-          <Outlet />
-        </Box>
-      </Flex>
+      <AppShell.Main bg="var(--app-page-bg)">
+        <Outlet />
+      </AppShell.Main>
 
       {/* Mobile / Tablet Navigation */}
-      <Drawer.Root opened={drawerOpened} onClose={handlers.close} size={260}>
+      <Drawer.Root
+        opened={drawerOpened}
+        onClose={handlers.close}
+        size={SIDEBAR_WIDTH}
+      >
         <Drawer.Overlay />
         <Drawer.Content aria-label="Navigation">
-          <AppSidebar onNavigate={handlers.close} />
+          <nav aria-label="Main" style={{ height: "100%" }}>
+            <AppSidebar onNavigate={handlers.close} />
+          </nav>
         </Drawer.Content>
       </Drawer.Root>
-    </Flex>
+    </AppShell>
   );
 }

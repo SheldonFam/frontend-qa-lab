@@ -1,12 +1,8 @@
+import type { ApiScenarioStatus } from "../../../types/api";
 import type { LanguageCode } from "../constants/languages";
 import type { Viewport } from "./viewport";
 
-export type TestScenarioStatus =
-  | "pending"
-  | "running"
-  | "passed"
-  | "failed"
-  | "skipped";
+export type TestScenarioStatus = ApiScenarioStatus;
 
 export interface TestScenario {
   id: string;

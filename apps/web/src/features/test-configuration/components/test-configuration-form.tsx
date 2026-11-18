@@ -31,6 +31,7 @@ interface TestConfigurationFormValues {
 
 interface TestConfigurationFormProps {
   onSubmit: (configuration: TestConfiguration) => void;
+  onChange: () => void;
 }
 
 function isValidHttpUrl(value: string): boolean {
@@ -45,10 +46,12 @@ function isValidHttpUrl(value: string): boolean {
 
 export function TestConfigurationForm({
   onSubmit,
+  onChange,
 }: TestConfigurationFormProps) {
   const form = useForm<TestConfigurationFormValues>({
     mode: "controlled",
     validateInputOnBlur: true,
+    onValuesChange: onChange,
     initialValues: {
       targetUrl: "",
       languages: [],
