@@ -3,6 +3,8 @@ import type { Browser } from "playwright";
 
 import { launchBrowser } from "../../../browser/browser-manager.js";
 
+import type { AgentClient } from "../../agent/clients/agent-client.js";
+
 import { generateTestPlan } from "../../planner/service/planner.service.js";
 import { mockLLMClient } from "../../planner/clients/mock-llm.client.js";
 
@@ -40,6 +42,7 @@ export function createRun(input: CreateRunInput): TestRun {
 export async function executeRun(
   runId: string,
   input: CreateRunInput,
+  agentClient?: AgentClient,
 ): Promise<void> {
   const { configuration, requirements } = input;
 
@@ -86,6 +89,7 @@ export async function executeRun(
         scenario,
         testPlan,
         runId,
+        agentClient,
       );
 
       // Step 5: Save scenario result

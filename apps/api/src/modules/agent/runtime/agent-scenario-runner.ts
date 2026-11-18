@@ -2,7 +2,8 @@ import type { Browser } from "playwright";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
-import type { AgentMessage } from "../clients/agent-client.js";
+import type { AgentClient, AgentMessage } from "../clients/agent-client.js";
+
 import { createAgentRuntime } from "./agent-runtime.js";
 
 import type { TestPlan } from "../../planner/schemas/test-plan.schema.js";
@@ -58,6 +59,7 @@ function buildAssertions(messages: AgentMessage[]): {
   }
 
   const assertions: ScenarioResult["assertions"] = [];
+  const errors: string[] = [];
 
   for (const message of messages) {
     if (message.role !== "tool") {
@@ -76,13 +78,24 @@ function buildAssertions(messages: AgentMessage[]): {
 
     const result = parseToolResult(message.content);
 
-    if (!result || result.success !== true) {
+    if (!result) {
+      errors.push(`${toolName}: Invalid tool result`);
+      continue;
+    }
+
+    if (result.success !== true) {
+      const toolError = isRecord(result.error)
+        ? result.error.message
+        : "Unknown tool error";
+
+      errors.push(`${toolName}: ${String(toolError)}`);
       continue;
     }
 
     const data = result.data;
 
     if (!isRecord(data) || typeof data.passed !== "boolean") {
+      errors.push(`${toolName}: Invalid assertion result`);
       continue;
     }
 
@@ -95,7 +108,7 @@ function buildAssertions(messages: AgentMessage[]): {
 
   return {
     assertions,
-    error: null,
+    error: errors.length > 0 ? errors.join("; ") : null,
   };
 }
 
@@ -105,6 +118,7 @@ export async function runAgentScenario(
   scenario: TestScenario,
   testPlan: TestPlan,
   runId: string,
+  agentClient?: AgentClient,
 ): Promise<ScenarioResult> {
   let url = configuration.targetUrl;
   let title: string | null = null;
@@ -174,16 +188,24 @@ Rules:
 
     // 5. Execute Agent Loop
     const agentResult = await runtime.runAgent({
+      client: agentClient,
       messages,
       maxSteps: MAX_AGENT_STEPS,
     });
 
     // 6. Collect actual Assertion results
     const assertionResult = buildAssertions(agentResult.messages);
+
     assertions = assertionResult.assertions;
+    error = assertionResult.error;
 
     if (agentResult.status === "max_steps_reached") {
-      error = `Agent reached the maximum step limit (${MAX_AGENT_STEPS})`;
+      error = [
+        error,
+        `Agent reached the maximum step limit (${MAX_AGENT_STEPS})`,
+      ]
+        .filter(Boolean)
+        .join("; ");
     }
 
     if (assertions.length === 0 && error === null) {
@@ -256,7 +278,9 @@ Rules:
     try {
       const screenshotDir = path.join(process.cwd(), "screenshots", runId);
 
-      await mkdir(screenshotDir, { recursive: true });
+      await mkdir(screenshotDir, {
+        recursive: true,
+      });
 
       screenshotPath = path.join(screenshotDir, `${scenario.id}.png`);
 
