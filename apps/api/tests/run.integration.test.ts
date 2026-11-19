@@ -10,11 +10,16 @@ import {
 import type { Server } from "node:http";
 import type { Browser } from "playwright";
 
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import path from "node:path";
+
 import app from "../src/app.js";
 
 import { launchBrowser } from "../src/browser/browser-manager.js";
 import { runAgentScenario } from "../src/modules/agent/runtime/agent-scenario-runner.js";
 import { runRepository } from "../src/modules/runs/repositories/run.repository.js";
+import type { TestRun } from "../src/modules/runs/types/run.types.js";
+import type { ScenarioResult } from "../src/modules/runs/types/scenario.types.js";
 
 // Mock Browser Manager
 vi.mock("../src/browser/browser-manager.js", () => ({
@@ -29,6 +34,41 @@ vi.mock("../src/modules/agent/runtime/agent-scenario-runner.js", () => ({
 describe("Runs API Integration", () => {
   let server: Server;
   let baseUrl: string;
+
+  function createTestRun(runId: string): TestRun {
+    return {
+      id: runId,
+      targetUrl: "https://example.com",
+      status: "completed",
+      createdAt: new Date().toISOString(),
+      startedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
+      scenarios: [],
+      results: [],
+      requirements: "Test screenshot API",
+      testPlan: null,
+    };
+  }
+
+  function createScreenshotResult(
+    scenarioId: string,
+    screenshotPath: string | null,
+  ): ScenarioResult {
+    return {
+      scenarioId,
+      status: "passed",
+      url: "https://example.com",
+      title: "Example Domain",
+      consoleErrors: [],
+      pageErrors: [],
+      failedRequests: [],
+      buttons: [],
+      inputs: [],
+      error: null,
+      assertions: [],
+      screenshotPath,
+    };
+  }
 
   beforeAll(async () => {
     server = app.listen(0);
@@ -199,5 +239,92 @@ describe("Runs API Integration", () => {
     expect(launchBrowser).toHaveBeenCalledOnce();
     expect(runAgentScenario).toHaveBeenCalledOnce();
     expect(browser.close).toHaveBeenCalledOnce();
+  });
+
+  it("should return a screenshot when it exists", async () => {
+    const runId = `screenshot-test-${Date.now()}`;
+    const scenarioId = "scenario-1";
+
+    const screenshotPath = path.join(
+      process.cwd(),
+      "screenshots",
+      runId,
+      `${scenarioId}.png`,
+    );
+
+    // Minimal PNG signature for testing the file response
+    const screenshotBuffer = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+
+    await mkdir(path.dirname(screenshotPath), { recursive: true });
+    await writeFile(screenshotPath, screenshotBuffer);
+
+    try {
+      const testRun = createTestRun(runId);
+
+      testRun.results.push(createScreenshotResult(scenarioId, screenshotPath));
+
+      runRepository.create(testRun);
+
+      const response = await fetch(
+        `${baseUrl}/runs/${runId}/scenarios/${scenarioId}/screenshot`,
+      );
+
+      const responseBuffer = Buffer.from(await response.arrayBuffer());
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toContain("image/png");
+      expect(responseBuffer).toEqual(screenshotBuffer);
+    } finally {
+      await rm(path.dirname(screenshotPath), {
+        recursive: true,
+        force: true,
+      });
+    }
+  });
+
+  it("should return 404 when run does not exist", async () => {
+    const response = await fetch(
+      `${baseUrl}/runs/non-existent-run/scenarios/scenario-1/screenshot`,
+    );
+
+    const body = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(body.error.code).toBe("RUN_NOT_FOUND");
+  });
+
+  it("should return 404 when scenario result does not exist", async () => {
+    const runId = `screenshot-test-${Date.now()}`;
+
+    runRepository.create(createTestRun(runId));
+
+    const response = await fetch(
+      `${baseUrl}/runs/${runId}/scenarios/non-existent-scenario/screenshot`,
+    );
+
+    const body = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(body.error.code).toBe("SCENARIO_RESULT_NOT_FOUND");
+  });
+
+  it("should return 404 when scenario has no screenshot", async () => {
+    const runId = `screenshot-test-${Date.now()}`;
+    const scenarioId = "scenario-1";
+
+    const testRun = createTestRun(runId);
+
+    testRun.results.push(createScreenshotResult(scenarioId, null));
+
+    runRepository.create(testRun);
+
+    const response = await fetch(
+      `${baseUrl}/runs/${runId}/scenarios/${scenarioId}/screenshot`,
+    );
+
+    const body = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(body.error.code).toBe("SCREENSHOT_NOT_FOUND");
   });
 });

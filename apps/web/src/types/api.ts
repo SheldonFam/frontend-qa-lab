@@ -26,49 +26,86 @@ export interface ApiTestScenario {
   status: ApiScenarioStatus;
 }
 
+// Assertion Result
+export interface ApiAssertionResult {
+  name: string;
+  passed: boolean;
+  message: string;
+}
+
+// Button Diagnostic
+export interface ApiButtonDiagnostic {
+  text: string;
+  disabled: boolean;
+}
+
+// Input Diagnostic
+export interface ApiInputDiagnostic {
+  type: string;
+  name: string | null;
+  placeholder: string | null;
+  disabled: boolean;
+}
+
 // Scenario Result
 export interface ApiScenarioResult {
   scenarioId: string;
   status: "passed" | "failed";
   url: string;
   title: string | null;
+
+  consoleErrors: string[];
+  pageErrors: string[];
+  failedRequests: string[];
+
+  buttons: ApiButtonDiagnostic[];
+  inputs: ApiInputDiagnostic[];
+
   error: string | null;
+  assertions: ApiAssertionResult[];
+  screenshotPath: string | null;
+}
+
+// Test Plan Step Scope
+export interface ApiTestPlanStepScope {
+  routes?: string[];
+  languages?: string[];
+}
+
+// Common Test Plan Step Fields
+interface ApiTestPlanStepBase {
+  id: string;
+  scope?: ApiTestPlanStepScope;
 }
 
 // Test Plan Step
 export type ApiTestPlanStep =
-  | {
-      id: string;
+  | (ApiTestPlanStepBase & {
       action: "navigate";
       target: string;
-    }
-  | {
-      id: string;
+    })
+  | (ApiTestPlanStepBase & {
       action: "click";
       target: string;
-    }
-  | {
-      id: string;
+    })
+  | (ApiTestPlanStepBase & {
       action: "fill";
       target: string;
       value: string;
-    }
-  | {
-      id: string;
+    })
+  | (ApiTestPlanStepBase & {
       action: "assert_visible";
       target: string;
-    }
-  | {
-      id: string;
+    })
+  | (ApiTestPlanStepBase & {
       action: "assert_text";
       target: string;
       expectedResult: string;
-    }
-  | {
-      id: string;
+    })
+  | (ApiTestPlanStepBase & {
       action: "assert_url";
       expectedResult: string;
-    };
+    });
 
 // Test Plan
 export interface ApiTestPlan {

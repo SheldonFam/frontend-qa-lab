@@ -68,6 +68,7 @@ export function TestRunDetailPage() {
           <ExecutionSummaryCard run={run} />
 
           <ScenarioResultsCard
+            runId={run.id}
             scenarios={run.scenarios}
             results={run.results}
           />
