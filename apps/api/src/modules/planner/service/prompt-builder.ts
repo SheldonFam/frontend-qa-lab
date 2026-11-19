@@ -13,41 +13,14 @@ export type PlannerPrompt = {
   userPrompt: string;
 };
 
-function sanitizeUntrustedPromptText(value: string): string {
-  return value
-    .replace(/[\\]/g, "\\\\")
-    .replace(/[`]/g, "\\`")
-    .replace(/[<]/g, "\\u003c")
-    .replace(/[>]/g, "\\u003e");
-}
+const MAX_REQUIREMENTS_LENGTH = 2000;
 
-function normalizeUntrustedRequirements(value: string): string {
+function cleanRequirements(value: string): string {
   return value
     .replace(/[\u0000-\u001f\u007f]/g, " ")
-    .replace(/```[\s\S]*?```/g, " ")
-    .replace(/\b(system|assistant|developer|user)\s*:/gi, " ")
-    .replace(
-      /\b(ignore|disregard|override)\b[\s\S]{0,80}\b(instruction|rule|policy|previous)\b/gi,
-      " ",
-    )
-    .replace(/<\/?[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, 2000);
-}
-
-function toConstrainedRequirementText(value: string): string {
-  return value
-    .normalize("NFKC")
-    .replace(/[^\x20-\x7E]/g, " ")
-    .replace(/[`$\\{}[\]<>]/g, " ")
-    .replace(
-      /\b(system|assistant|developer|user|tool|function|instruction|policy|prompt)\b/gi,
-      " ",
-    )
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 1000);
+    .slice(0, MAX_REQUIREMENTS_LENGTH);
 }
 
 function encodeUntrustedPromptText(value: string): string {
@@ -113,22 +86,14 @@ Rules:
 
   const serializedInput = JSON.stringify(
     {
-      targetUrl_b64: encodeUntrustedPromptText(
-        sanitizeUntrustedPromptText(input.targetUrl),
-      ),
+      targetUrl_b64: encodeUntrustedPromptText(input.targetUrl),
       languages_b64: input.languages.map((value) =>
-        encodeUntrustedPromptText(sanitizeUntrustedPromptText(value)),
+        encodeUntrustedPromptText(value),
       ),
-      routes_b64: input.routes.map((value) =>
-        encodeUntrustedPromptText(sanitizeUntrustedPromptText(value)),
-      ),
+      routes_b64: input.routes.map((value) => encodeUntrustedPromptText(value)),
       viewports: input.viewports,
       requirements_b64: encodeUntrustedPromptText(
-        sanitizeUntrustedPromptText(
-          toConstrainedRequirementText(
-            normalizeUntrustedRequirements(input.requirements),
-          ),
-        ),
+        cleanRequirements(input.requirements),
       ),
     },
     null,

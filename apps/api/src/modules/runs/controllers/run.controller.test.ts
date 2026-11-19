@@ -282,3 +282,77 @@ describe("getAllRunsController", () => {
     });
   });
 });
+
+describe("createRunController scenario limit", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  function createInput(routeCount: number) {
+    return {
+      configuration: {
+        targetUrl: "https://example.com",
+        languages: ["en", "ms", "zh"],
+        routes: Array.from(
+          { length: routeCount },
+          (_, index) => `/page-${index}`,
+        ),
+        viewports: [
+          {
+            name: "desktop",
+            width: 1280,
+            height: 720,
+          },
+          {
+            name: "mobile",
+            width: 390,
+            height: 844,
+          },
+        ],
+      },
+      requirements: "Test login functionality",
+    };
+  }
+
+  it("should return 400 when the run has more than 30 scenarios", () => {
+    const routeCountForThirtySixScenarios = 6;
+
+    const req = {
+      body: createInput(routeCountForThirtySixScenarios),
+    } as Request;
+
+    const res = createMockResponse();
+
+    createRunController(req, res, vi.fn());
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      error: {
+        code: "TOO_MANY_SCENARIOS",
+        message: "A run can have at most 30 scenarios, but this one has 36",
+      },
+    });
+    expect(createRun).not.toHaveBeenCalled();
+    expect(executeRun).not.toHaveBeenCalled();
+  });
+
+  it("should accept a run with exactly 30 scenarios", () => {
+    const routeCountForThirtyScenarios = 5;
+
+    vi.mocked(createRun).mockReturnValue({ id: "run-1" } as TestRun);
+    vi.mocked(executeRun).mockResolvedValue(undefined);
+
+    const req = {
+      body: createInput(routeCountForThirtyScenarios),
+    } as Request;
+
+    const res = createMockResponse();
+
+    createRunController(req, res, vi.fn());
+
+    expect(res.status).toHaveBeenCalledWith(202);
+    expect(createRun).toHaveBeenCalledTimes(1);
+    expect(executeRun).toHaveBeenCalledTimes(1);
+  });
+});
