@@ -1,6 +1,5 @@
 import {
   Anchor,
-  Badge,
   Box,
   Group,
   Paper,
@@ -10,41 +9,15 @@ import {
   Stack,
 } from "@mantine/core";
 
+import { LanguageBadge } from "../../../components/language-badge";
 import { StatusBadge } from "../../../components/status-badge";
 import type { TestRun } from "../types/test-run";
+import { formatDate } from "../utils/format-date";
+import { formatDuration } from "../utils/format-duration";
 import { Link } from "react-router";
 
 interface TestRunTableProps {
   testRuns: TestRun[];
-}
-
-function formatDuration(testRun: TestRun): string {
-  if (testRun.status === "queued") {
-    return "Queued";
-  }
-
-  if (testRun.status === "running") {
-    return "In progress";
-  }
-
-  if (testRun.duration === null) {
-    return "—";
-  }
-
-  const minutes = Math.floor(testRun.duration / 60);
-  const seconds = testRun.duration % 60;
-
-  return `${minutes}m ${seconds}s`;
-}
-
-function formatDate(date: string): string {
-  return new Intl.DateTimeFormat("en-MY", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(new Date(date));
 }
 
 const tableColumns = [
@@ -122,9 +95,7 @@ export function TestRunTable({ testRuns }: TestRunTableProps) {
         <Table.Td>
           <Group gap={4}>
             {testRun.languages.map((language) => (
-              <Badge key={language} variant="default" size="sm">
-                {language.toUpperCase()}
-              </Badge>
+              <LanguageBadge key={language} language={language} />
             ))}
           </Group>
         </Table.Td>

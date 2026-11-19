@@ -5,6 +5,7 @@ import type {
   ApiTestPlan,
   ApiTestPlanStep,
 } from "../../../types/api";
+import { pluralize } from "../../../utils/pluralize";
 
 interface TestPlanCardProps {
   testPlan: ApiTestPlan | null;
@@ -49,11 +50,25 @@ function getStepScope(step: ApiTestPlanStep): string {
   return parts.join(" · ");
 }
 
+function getMissingPlanText(runStatus: ApiRunStatus): string {
+  if (runStatus === "failed") {
+    return "Test plan generation failed.";
+  }
+
+  if (runStatus === "cancelled" || runStatus === "completed") {
+    return "No test plan was generated for this run.";
+  }
+
+  return "The planner is generating a test plan...";
+}
+
 export function TestPlanCard({ testPlan, runStatus }: TestPlanCardProps) {
   return (
     <Paper withBorder radius="md" p="lg">
       <Stack gap="md">
-        <Title order={3}>Generated Test Plan</Title>
+        <Title order={2} size="h3">
+          Generated Test Plan
+        </Title>
 
         {testPlan ? (
           <>
@@ -65,7 +80,7 @@ export function TestPlanCard({ testPlan, runStatus }: TestPlanCardProps) {
               </Text>
 
               <Text size="xs" c="dimmed">
-                {testPlan.steps.length} steps generated
+                {pluralize(testPlan.steps.length, "step")} generated
               </Text>
             </Stack>
 
@@ -105,9 +120,7 @@ export function TestPlanCard({ testPlan, runStatus }: TestPlanCardProps) {
           </>
         ) : (
           <Text size="sm" c="dimmed">
-            {runStatus === "failed"
-              ? "Test plan generation failed."
-              : "The planner is generating a test plan..."}
+            {getMissingPlanText(runStatus)}
           </Text>
         )}
       </Stack>

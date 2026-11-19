@@ -8,7 +8,6 @@ import { ScenarioPreview } from "../components/scenario-preview";
 import { TestConfigurationForm } from "../components/test-configuration-form";
 
 import type { TestConfiguration } from "../types/test-configuration";
-import type { TestScenario } from "../types/test-scenario";
 
 import { generateScenarios } from "../utils/generate-scenarios";
 
@@ -16,13 +15,13 @@ import { useCreateTestRun } from "../../test-runs/hooks/use-test-runs";
 import { useNavigate } from "react-router";
 
 export function TestConfigurationPage() {
-  const [scenarios, setScenarios] = useState<TestScenario[]>([]);
-
   const [configuration, setConfiguration] = useState<TestConfiguration | null>(
     null,
   );
 
   const [requirements, setRequirements] = useState("");
+
+  const scenarios = configuration ? generateScenarios(configuration) : [];
 
   const createTestRunMutation = useCreateTestRun();
 
@@ -30,21 +29,18 @@ export function TestConfigurationPage() {
 
   // Step 1: Generate local scenarios for preview
   function handleGenerate(newConfiguration: TestConfiguration) {
-    setConfiguration(newConfiguration);
+    if (createTestRunMutation.isPending) {
+      return;
+    }
 
-    setScenarios(generateScenarios(newConfiguration));
+    setConfiguration(newConfiguration);
 
     // Reset previous API mutation state
     createTestRunMutation.reset();
   }
 
   function handleFormChange() {
-    if (!configuration) {
-      return;
-    }
-
     setConfiguration(null);
-    setScenarios([]);
   }
 
   // Step 2: Start the actual Backend Test Run

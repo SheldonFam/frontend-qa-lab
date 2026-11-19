@@ -23,7 +23,9 @@ export function ExecutionSummaryCard({ run }: ExecutionSummaryCardProps) {
   return (
     <Paper withBorder radius="md" p="lg">
       <Stack gap="md">
-        <Title order={3}>Execution Summary</Title>
+        <Title order={2} size="h3">
+          Execution Summary
+        </Title>
 
         <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
           {/* Execution Progress */}
@@ -36,7 +38,11 @@ export function ExecutionSummaryCard({ run }: ExecutionSummaryCardProps) {
               {Math.round(executionProgress)}%
             </Text>
 
-            <Progress value={executionProgress} size="sm" />
+            <Progress
+              value={executionProgress}
+              size="sm"
+              aria-label="Execution progress"
+            />
 
             <Text size="xs" c="dimmed">
               {counts.completed} / {counts.total} completed

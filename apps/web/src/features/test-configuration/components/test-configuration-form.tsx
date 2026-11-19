@@ -13,14 +13,9 @@ import {
 import { useForm } from "@mantine/form";
 
 import { LANGUAGE_OPTIONS, type LanguageCode } from "../constants/languages";
+import { VIEWPORT_PRESETS } from "../constants/viewports";
 import type { TestConfiguration } from "../types/test-configuration";
-import type { Viewport } from "../types/viewport";
-
-const VIEWPORT_PRESETS: Viewport[] = [
-  { name: "Desktop", width: 1440, height: 900 },
-  { name: "Tablet", width: 768, height: 1024 },
-  { name: "Mobile", width: 390, height: 844 },
-];
+import { cleanRoutes } from "../utils/clean-routes";
 
 interface TestConfigurationFormValues {
   targetUrl: string;
@@ -76,7 +71,7 @@ export function TestConfigurationForm({
         value.length === 0 ? "Select at least one language" : null,
 
       routes: (value) => {
-        const routes = value.map((route) => route.trim()).filter(Boolean);
+        const routes = cleanRoutes(value);
 
         if (routes.length === 0) {
           return "Enter at least one route";
@@ -102,9 +97,7 @@ export function TestConfigurationForm({
     onSubmit({
       targetUrl: values.targetUrl.trim(),
       languages: values.languages,
-      routes: values.routes
-        .map((route) => route.trim())
-        .filter((route) => route.length > 0),
+      routes: cleanRoutes(values.routes),
       viewports: selectedViewports,
     });
   }

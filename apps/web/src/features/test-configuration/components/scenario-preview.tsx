@@ -1,6 +1,8 @@
-import { Badge, Paper, Stack, Table, Text, Title } from "@mantine/core";
+import { Paper, Stack, Table, Text, Title } from "@mantine/core";
 
+import { LanguageBadge } from "../../../components/language-badge";
 import { StatusBadge } from "../../../components/status-badge";
+import { pluralize } from "../../../utils/pluralize";
 import type { TestScenario } from "../types/test-scenario";
 
 interface ScenarioPreviewProps {
@@ -19,7 +21,7 @@ export function ScenarioPreview({ scenarios }: ScenarioPreviewProps) {
         <Text size="sm" c="dimmed" role="status">
           {scenarios.length === 0
             ? "No scenarios generated yet. Configure your test and click Generate Scenarios."
-            : `Generated ${scenarios.length} scenarios.`}
+            : `Generated ${pluralize(scenarios.length, "scenario")}.`}
         </Text>
 
         {scenarios.length > 0 && (
@@ -41,9 +43,7 @@ export function ScenarioPreview({ scenarios }: ScenarioPreviewProps) {
                   <Table.Tr key={scenario.id}>
                     <Table.Td>{index + 1}</Table.Td>
                     <Table.Td>
-                      <Badge variant="default" size="sm">
-                        {scenario.language.toUpperCase()}
-                      </Badge>
+                      <LanguageBadge language={scenario.language} />
                     </Table.Td>
                     <Table.Td>{scenario.route}</Table.Td>
                     <Table.Td>{scenario.viewport.name}</Table.Td>

@@ -55,7 +55,9 @@ export function TestRunDetailPage() {
           {/* Testing Requirements */}
           <Paper withBorder radius="md" p="lg">
             <Stack gap="sm">
-              <Title order={3}>Testing Requirements</Title>
+              <Title order={2} size="h3">
+                Testing Requirements
+              </Title>
 
               <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
                 {run.requirements}
