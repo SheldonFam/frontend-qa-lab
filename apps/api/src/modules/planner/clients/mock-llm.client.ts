@@ -4,34 +4,13 @@ import type { PlannerPrompt } from "../service/prompt-builder.js";
 export const mockLLMClient: LLMClient = {
   async generate(_prompt: PlannerPrompt): Promise<unknown> {
     return {
-      name: "Login Functionality Test",
-      description: "Verify the login functionality.",
+      name: "Sample plan (mock planner)",
+      description:
+        "The mock planner does not read the requirements. It only checks that the page shows a heading.",
       steps: [
         {
-          action: "navigate",
-          target: "/login",
-        },
-        {
           action: "assert_visible",
-          target: "login form",
-        },
-        {
-          action: "fill",
-          target: "email input",
-          value: "tester@example.com",
-        },
-        {
-          action: "fill",
-          target: "password input",
-          value: "test-password",
-        },
-        {
-          action: "click",
-          target: "login button",
-        },
-        {
-          action: "assert_url",
-          expectedResult: "/dashboard",
+          target: "main heading",
         },
       ],
     };

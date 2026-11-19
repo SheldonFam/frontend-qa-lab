@@ -233,7 +233,7 @@ describe("Runs API Integration", () => {
     expect(getBody.data.requirements).toBe(input.requirements);
 
     expect(getBody.data.testPlan).not.toBeNull();
-    expect(getBody.data.testPlan.name).toBe("Login Functionality Test");
+    expect(getBody.data.testPlan.name).toBe("Sample plan (mock planner)");
 
     expect(getBody.data.results).toHaveLength(1);
     expect(getBody.data.results[0].status).toBe("passed");

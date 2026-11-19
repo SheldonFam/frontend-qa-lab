@@ -1,4 +1,7 @@
 import OpenAI from "openai";
+
+import { env } from "../../../config/env.js";
+import { getOpenAIErrorMessage } from "../../../utils/get-openai-error-message.js";
 import type { AgentClient, AgentMessage } from "./agent-client.js";
 
 export type OpenAIResponsesClient = Pick<OpenAI, "responses">;
@@ -7,27 +10,6 @@ type OpenAIResponseInput = Exclude<
   Parameters<OpenAIResponsesClient["responses"]["create"]>[0]["input"],
   string
 >;
-
-const model = process.env.OPENAI_MODEL ?? "gpt-6-astra";
-
-const RATE_LIMIT_STATUS = 429;
-const UNAUTHORIZED_STATUS = 401;
-
-function getOpenAIErrorMessage(error: unknown): string {
-  if (!(error instanceof OpenAI.APIError) || error.status === undefined) {
-    return "Could not reach the AI service.";
-  }
-
-  if (error.status === RATE_LIMIT_STATUS) {
-    return "The AI service usage limit was reached. Try again later.";
-  }
-
-  if (error.status === UNAUTHORIZED_STATUS) {
-    return "The AI service rejected the API key.";
-  }
-
-  return `The AI service returned an error (${error.status}).`;
-}
 
 export function createOpenAIAgentClient(
   openai: OpenAIResponsesClient,
@@ -150,7 +132,7 @@ let defaultClient: AgentClient | undefined;
 export const openAIAgentClient: AgentClient = {
   generateResponse(input) {
     if (!defaultClient) {
-      defaultClient = createOpenAIAgentClient(new OpenAI(), model);
+      defaultClient = createOpenAIAgentClient(new OpenAI(), env.OPENAI_MODEL);
     }
 
     return defaultClient.generateResponse(input);

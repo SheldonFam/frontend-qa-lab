@@ -78,7 +78,7 @@ describe("processPlannerOutput", () => {
 
     const result = await generateTestPlan(promptInput, mockLLMClient);
 
-    expect(result.name).toBe("Login Functionality Test");
+    expect(result.name).toBe("Sample plan (mock planner)");
     expect(result.id).toBeDefined();
 
     expect(result.steps.length).toBeGreaterThan(0);

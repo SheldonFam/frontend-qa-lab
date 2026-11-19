@@ -6,7 +6,7 @@ import { launchBrowser } from "../../../browser/browser-manager.js";
 import type { AgentClient } from "../../agent/clients/agent-client.js";
 
 import { generateTestPlan } from "../../planner/service/planner.service.js";
-import { mockLLMClient } from "../../planner/clients/mock-llm.client.js";
+import { getPlannerClient } from "../../planner/clients/planner-client.js";
 import { mapTestPlanToScenario } from "../../planner/service/test-plan-mapper.js";
 
 import { runRepository } from "../repositories/run.repository.js";
@@ -72,7 +72,7 @@ export async function executeRun(
         viewports: configuration.viewports,
         requirements,
       },
-      mockLLMClient,
+      getPlannerClient(),
     );
 
     // Step 2: Save Global Test Plan
