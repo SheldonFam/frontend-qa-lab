@@ -120,6 +120,7 @@ describe("createRunController", () => {
       results: [],
       requirements: input.requirements,
       testPlan: null,
+      error: null,
     };
 
     // 4. Mock Service responses
@@ -205,6 +206,7 @@ describe("getRunController", () => {
       results: [],
       requirements: "Test login functionality",
       testPlan: null,
+      error: null,
     };
 
     // 2. Mock getRun
@@ -255,6 +257,7 @@ describe("getAllRunsController", () => {
       results: [],
       requirements: "Test login functionality",
       testPlan: null,
+      error: null,
     };
 
     const mockRuns: TestRun[] = [mockRun];

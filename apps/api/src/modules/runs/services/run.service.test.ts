@@ -346,3 +346,51 @@ describe("executeRun", () => {
     expect(browser.close).toHaveBeenCalledOnce();
   });
 });
+
+describe("executeRun failure reason", () => {
+  beforeEach(() => {
+    runRepository.clear();
+    vi.clearAllMocks();
+  });
+
+  const input: CreateRunInput = {
+    configuration: {
+      targetUrl: "https://example.com",
+      languages: ["en"],
+      routes: ["/"],
+      viewports: [
+        {
+          name: "desktop",
+          width: 1280,
+          height: 720,
+        },
+      ],
+    },
+    requirements: "Test login functionality",
+  };
+
+  it("should start a run without an error", () => {
+    const run = createRun(input);
+
+    expect(run.error).toBeNull();
+  });
+
+  it("should save a short reason when the run fails", async () => {
+    vi.spyOn(mockLLMClient, "generate").mockRejectedValueOnce(
+      new Error(
+        "Planner generation failed\nCall log:\n  \u001b[2m- details\u001b[22m",
+      ),
+    );
+
+    const run = createRun(input);
+
+    await expect(executeRun(run.id, input)).rejects.toThrow(
+      "Planner generation failed",
+    );
+
+    const updatedRun = runRepository.findById(run.id);
+
+    expect(updatedRun?.status).toBe("failed");
+    expect(updatedRun?.error).toBe("Planner generation failed");
+  });
+});

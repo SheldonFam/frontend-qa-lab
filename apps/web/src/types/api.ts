@@ -141,6 +141,7 @@ export interface ApiTestRun {
   testPlan: ApiTestPlan | null;
   scenarios: ApiTestScenario[];
   results: ApiScenarioResult[];
+  error: string | null;
 }
 
 // API Responses

@@ -47,6 +47,7 @@ describe("Runs API Integration", () => {
       results: [],
       requirements: "Test screenshot API",
       testPlan: null,
+      error: null,
     };
   }
 
@@ -213,6 +214,7 @@ describe("Runs API Integration", () => {
         targetUrl: configuration.targetUrl,
         requirements: input.requirements,
         testPlan: null,
+        error: null,
       },
     });
 
@@ -326,5 +328,27 @@ describe("Runs API Integration", () => {
 
     expect(response.status).toBe(404);
     expect(body.error.code).toBe("SCREENSHOT_NOT_FOUND");
+  });
+
+  it("should return 400 when the request body is not valid JSON", async () => {
+    const response = await fetch(`${baseUrl}/runs`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: "{ not json",
+    });
+
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+
+    expect(body).toEqual({
+      success: false,
+      error: {
+        code: "INVALID_JSON",
+        message: "Request body is not valid JSON",
+      },
+    });
   });
 });

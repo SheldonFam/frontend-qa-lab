@@ -45,11 +45,7 @@ export const takeScreenshotTool: Tool<
       };
     }
 
-    const screenshotDirectory = path.resolve(
-      process.cwd(),
-      "screenshots",
-      runId,
-    );
+    const screenshotDirectory = path.join("screenshots", runId);
 
     const screenshotPath = path.join(screenshotDirectory, `${scenarioId}.png`);
 

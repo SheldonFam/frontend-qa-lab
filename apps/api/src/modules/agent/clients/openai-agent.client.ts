@@ -10,6 +10,25 @@ type OpenAIResponseInput = Exclude<
 
 const model = process.env.OPENAI_MODEL ?? "gpt-6-astra";
 
+const RATE_LIMIT_STATUS = 429;
+const UNAUTHORIZED_STATUS = 401;
+
+function getOpenAIErrorMessage(error: unknown): string {
+  if (!(error instanceof OpenAI.APIError) || error.status === undefined) {
+    return "Could not reach the AI service.";
+  }
+
+  if (error.status === RATE_LIMIT_STATUS) {
+    return "The AI service usage limit was reached. Try again later.";
+  }
+
+  if (error.status === UNAUTHORIZED_STATUS) {
+    return "The AI service rejected the API key.";
+  }
+
+  return `The AI service returned an error (${error.status}).`;
+}
+
 export function createOpenAIAgentClient(
   openai: OpenAIResponsesClient,
   modelName: string,
@@ -74,12 +93,18 @@ export function createOpenAIAgentClient(
         }
       }
 
-      const response = await openai.responses.create({
-        model: modelName,
-        instructions,
-        input,
-        tools: openAITools,
-      });
+      const response = await openai.responses
+        .create({
+          model: modelName,
+          instructions,
+          input,
+          tools: openAITools,
+        })
+        .catch((error: unknown) => {
+          console.error("OpenAI request failed:", error);
+
+          throw new Error(getOpenAIErrorMessage(error));
+        });
 
       if (response.status !== "completed") {
         throw new Error(

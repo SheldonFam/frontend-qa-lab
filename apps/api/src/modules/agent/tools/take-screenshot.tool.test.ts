@@ -12,7 +12,7 @@ describe("takeScreenshotTool", () => {
   const runId = "test-run-001";
   const scenarioId = "test-scenario-001";
 
-  const screenshotDirectory = path.resolve(process.cwd(), "screenshots", runId);
+  const screenshotDirectory = path.join("screenshots", runId);
 
   const screenshotPath = path.join(screenshotDirectory, `${scenarioId}.png`);
 

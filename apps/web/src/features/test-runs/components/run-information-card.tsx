@@ -27,6 +27,12 @@ export function RunInformationCard({ run }: RunInformationCardProps) {
           <StatusBadge status={run.status} />
         </Group>
 
+        {run.error && (
+          <Text size="sm" c="red">
+            Error: {run.error}
+          </Text>
+        )}
+
         <Text size="sm">Total Scenarios: {counts.total}</Text>
 
         <Text size="sm">Completed Scenarios: {counts.completed}</Text>
