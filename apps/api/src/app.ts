@@ -26,10 +26,6 @@ app.get("/health", (req, res) => {
   });
 });
 
-app.get("/test-error", async () => {
-  throw new Error("Testing global error handler");
-});
-
 app.use("/runs", runRoutes);
 
 // Not Found Handler
