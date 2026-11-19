@@ -72,3 +72,58 @@ describe("buildPlannerPrompt", () => {
     expect(result.systemPrompt).toContain("Do not execute browser actions");
   });
 });
+
+function getRequirementsInPrompt(requirements: string): string {
+  const prompt = buildPlannerPrompt({
+    targetUrl: "https://example.com",
+    languages: ["en"],
+    routes: ["/"],
+    viewports: [{ name: "Desktop", width: 1920, height: 1080 }],
+    requirements,
+  });
+
+  const match = prompt.userPrompt.match(/"requirements_b64": "([^"]*)"/);
+
+  return Buffer.from(match?.[1] ?? "", "base64").toString("utf8");
+}
+
+describe("buildPlannerPrompt requirements", () => {
+  it("should keep ordinary words such as user, function and system", () => {
+    const requirements =
+      "Check that the user can log in and the search function works on the system settings page.";
+
+    expect(getRequirementsInPrompt(requirements)).toBe(requirements);
+  });
+
+  it("should keep requirements written in other languages", () => {
+    const requirements = [
+      "检查登录页面是否正常显示",
+      "Semak borang hubungi kami – pastikan mesej ralat dipaparkan",
+    ];
+
+    for (const requirement of requirements) {
+      expect(getRequirementsInPrompt(requirement)).toBe(requirement);
+    }
+  });
+
+  it("should keep symbols such as prices, brackets and tags", () => {
+    const requirements =
+      "Verify the price shows $10, the [Buy] button works and <b>Sale</b> is bold.";
+
+    expect(getRequirementsInPrompt(requirements)).toBe(requirements);
+  });
+
+  it("should turn line breaks and tabs into single spaces", () => {
+    const requirements = "Check the header.\n\nCheck\tthe   footer.  ";
+
+    expect(getRequirementsInPrompt(requirements)).toBe(
+      "Check the header. Check the footer.",
+    );
+  });
+
+  it("should limit requirements to 2000 characters", () => {
+    const requirements = "a".repeat(2500);
+
+    expect(getRequirementsInPrompt(requirements)).toHaveLength(2000);
+  });
+});

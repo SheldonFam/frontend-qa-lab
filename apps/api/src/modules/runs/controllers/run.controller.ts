@@ -8,6 +8,8 @@ import {
   getRun,
 } from "../services/run.service.js";
 
+const MAX_SCENARIOS_PER_RUN = 30;
+
 export const createRunController: RequestHandler = (req, res) => {
   const result = createRunInputSchema.safeParse(req.body);
 
@@ -18,6 +20,21 @@ export const createRunController: RequestHandler = (req, res) => {
         code: "VALIDATION_ERROR",
         message: "Invalid run input",
         details: result.error.issues,
+      },
+    });
+
+    return;
+  }
+
+  const { languages, routes, viewports } = result.data.configuration;
+  const scenarioCount = languages.length * routes.length * viewports.length;
+
+  if (scenarioCount > MAX_SCENARIOS_PER_RUN) {
+    res.status(400).json({
+      success: false,
+      error: {
+        code: "TOO_MANY_SCENARIOS",
+        message: `A run can have at most ${MAX_SCENARIOS_PER_RUN} scenarios, but this one has ${scenarioCount}`,
       },
     });
 
