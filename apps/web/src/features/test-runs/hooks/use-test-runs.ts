@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { ApiError } from "../api/api-error";
 import { createTestRun, getTestRun, getTestRuns } from "../api/test-run-api";
 
 import type { TestRunStatus } from "../types/test-run";
@@ -10,10 +11,21 @@ const TEST_RUNS_KEY = ["test-runs"];
 const DETAIL_REFRESH_INTERVAL = 1000;
 const LIST_REFRESH_INTERVAL = 3000;
 
+const MAX_RETRIES = 3;
+const NOT_FOUND_STATUS = 404;
+
 function isFinished(status: TestRunStatus): boolean {
   return (
     status === "completed" || status === "failed" || status === "cancelled"
   );
+}
+
+function shouldRetry(failureCount: number, error: Error): boolean {
+  if (error instanceof ApiError && error.status === NOT_FOUND_STATUS) {
+    return false;
+  }
+
+  return failureCount < MAX_RETRIES;
 }
 
 export function useCreateTestRun() {
@@ -70,6 +82,7 @@ export function useTestRun(id: string | undefined) {
       return getTestRun(id);
     },
     enabled: Boolean(id),
+    retry: shouldRetry,
     refetchInterval: (query) => {
       if (query.state.status === "error") {
         return false;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { Alert, Button, Group, Textarea } from "@mantine/core";
 
@@ -27,9 +27,11 @@ export function TestConfigurationPage() {
 
   const navigate = useNavigate();
 
+  const isStartingRef = useRef(false);
+
   // Step 1: Generate local scenarios for preview
   function handleGenerate(newConfiguration: TestConfiguration) {
-    if (createTestRunMutation.isPending) {
+    if (isStartingRef.current) {
       return;
     }
 
@@ -45,15 +47,20 @@ export function TestConfigurationPage() {
 
   // Step 2: Start the actual Backend Test Run
   function handleStartTestRun() {
-    if (!configuration) {
+    if (!configuration || isStartingRef.current) {
       return;
     }
+
+    isStartingRef.current = true;
 
     createTestRunMutation.mutate(
       { configuration, requirements: requirements.trim() },
       {
         onSuccess: (run) => {
           navigate(`/test-runs/${run.id}`);
+        },
+        onError: () => {
+          isStartingRef.current = false;
         },
       },
     );

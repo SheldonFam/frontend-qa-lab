@@ -27,7 +27,7 @@ export function TestRunStats({ stats }: TestRunStatsProps) {
     {
       value: stats.failedRuns,
       label: "Failed",
-      description: "Runs with failures",
+      description: "Runs stopped by an error",
       color: "red",
     },
     {

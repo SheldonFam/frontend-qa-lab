@@ -5,6 +5,8 @@ import type {
   ApiTestRun,
 } from "../../../types/api";
 
+import { ApiError } from "./api-error";
+
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
 
@@ -28,11 +30,11 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   }
 
   if (!body.success) {
-    throw new Error(body.error.message);
+    throw new ApiError(body.error.message, response.status);
   }
 
   if (!response.ok) {
-    throw new Error(`Request failed (${response.status})`);
+    throw new ApiError(`Request failed (${response.status})`, response.status);
   }
 
   return body.data;
