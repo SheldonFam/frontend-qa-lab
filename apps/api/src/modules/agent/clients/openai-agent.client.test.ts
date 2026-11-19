@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import type OpenAI from "openai";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import OpenAI from "openai";
 import {
   createOpenAIAgentClient,
   type OpenAIResponsesClient,
@@ -119,5 +119,81 @@ describe("openAIAgentClient", () => {
         tools: [],
       }),
     ).rejects.toThrow("OpenAI response did not complete. Status: incomplete");
+  });
+});
+
+describe("openAIAgentClient errors", () => {
+  function createFailingOpenAI(error: unknown): OpenAIResponsesClient {
+    return {
+      responses: {
+        create: vi.fn().mockRejectedValue(error),
+      },
+    } as unknown as OpenAIResponsesClient;
+  }
+
+  function generateResponseWith(error: unknown) {
+    const client = createOpenAIAgentClient(
+      createFailingOpenAI(error),
+      "test-model",
+    );
+
+    return client.generateResponse({
+      messages: [
+        {
+          role: "user",
+          content: "Inspect the login page.",
+        },
+      ],
+      tools: [],
+    });
+  }
+
+  beforeEach(() => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  it("should hide the provider message when the usage limit is reached", async () => {
+    const providerError = new OpenAI.APIError(
+      429,
+      undefined,
+      "Rate limit reached in organization org-secret",
+      undefined,
+    );
+
+    await expect(generateResponseWith(providerError)).rejects.toThrow(
+      "The AI service usage limit was reached. Try again later.",
+    );
+  });
+
+  it("should explain when the API key is rejected", async () => {
+    const providerError = new OpenAI.APIError(
+      401,
+      undefined,
+      "Incorrect API key provided: sk-secret",
+      undefined,
+    );
+
+    await expect(generateResponseWith(providerError)).rejects.toThrow(
+      "The AI service rejected the API key.",
+    );
+  });
+
+  it("should report other provider errors by status only", async () => {
+    const providerError = new OpenAI.APIError(
+      500,
+      undefined,
+      "Internal details",
+      undefined,
+    );
+
+    await expect(generateResponseWith(providerError)).rejects.toThrow(
+      "The AI service returned an error (500).",
+    );
+  });
+
+  it("should report a connection problem", async () => {
+    await expect(
+      generateResponseWith(new Error("socket hang up")),
+    ).rejects.toThrow("Could not reach the AI service.");
   });
 });

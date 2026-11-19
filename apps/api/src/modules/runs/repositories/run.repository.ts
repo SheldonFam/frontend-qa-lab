@@ -22,7 +22,12 @@ export const runRepository = {
     updates: Partial<
       Pick<
         TestRun,
-        "status" | "startedAt" | "completedAt" | "scenarios" | "testPlan"
+        | "status"
+        | "startedAt"
+        | "completedAt"
+        | "scenarios"
+        | "testPlan"
+        | "error"
       >
     >,
   ): TestRun | undefined {

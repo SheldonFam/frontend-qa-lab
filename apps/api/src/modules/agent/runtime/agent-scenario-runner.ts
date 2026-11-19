@@ -1,10 +1,11 @@
-import type { Browser } from "playwright";
+import type { Browser, Page } from "playwright";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
 import type { AgentClient, AgentMessage } from "../clients/agent-client.js";
 
 import { createAgentRuntime } from "./agent-runtime.js";
+import { getErrorSummary } from "../../../utils/get-error-summary.js";
 
 import type { TestPlan } from "../../planner/schemas/test-plan.schema.js";
 import type { TestConfiguration } from "../../runs/schemas/test-configuration.schema.js";
@@ -112,6 +113,29 @@ function buildAssertions(messages: AgentMessage[]): {
   };
 }
 
+async function saveScreenshot(
+  page: Page,
+  runId: string,
+  scenarioId: string,
+): Promise<string | null> {
+  const screenshotPath = path.join("screenshots", runId, `${scenarioId}.png`);
+
+  try {
+    await mkdir(path.dirname(screenshotPath), {
+      recursive: true,
+    });
+
+    await page.screenshot({
+      path: screenshotPath,
+      fullPage: true,
+    });
+
+    return screenshotPath;
+  } catch {
+    return null;
+  }
+}
+
 export async function runAgentScenario(
   browser: Browser,
   configuration: TestConfiguration,
@@ -135,6 +159,7 @@ export async function runAgentScenario(
   let error: string | null = null;
 
   let runtime: Awaited<ReturnType<typeof createAgentRuntime>> | undefined;
+  let pageLoaded = false;
 
   try {
     // 1. Build the Scenario URL
@@ -150,6 +175,8 @@ export async function runAgentScenario(
 
     // 3. Navigate to the Scenario URL
     await runtime.page.goto(url);
+
+    pageLoaded = true;
 
     // 4. Prepare Agent messages
     const messages: AgentMessage[] = [
@@ -275,22 +302,7 @@ Rules:
     failedRequests = [...runtime.diagnostics.failedRequests];
 
     // 9. Capture screenshot
-    try {
-      const screenshotDir = path.join(process.cwd(), "screenshots", runId);
-
-      await mkdir(screenshotDir, {
-        recursive: true,
-      });
-
-      screenshotPath = path.join(screenshotDir, `${scenario.id}.png`);
-
-      await runtime.page.screenshot({
-        path: screenshotPath,
-        fullPage: true,
-      });
-    } catch {
-      screenshotPath = null;
-    }
+    screenshotPath = await saveScreenshot(runtime.page, runId, scenario.id);
 
     // 10. Determine final Scenario status
     const passed =
@@ -313,8 +325,13 @@ Rules:
       screenshotPath,
     };
   } catch (caughtError: unknown) {
-    error =
-      caughtError instanceof Error ? caughtError.message : String(caughtError);
+    console.error(`Scenario ${scenario.id} failed:`, caughtError);
+
+    error = getErrorSummary(caughtError);
+
+    if (runtime && pageLoaded) {
+      screenshotPath = await saveScreenshot(runtime.page, runId, scenario.id);
+    }
 
     if (runtime) {
       consoleErrors = [...runtime.diagnostics.consoleErrors];

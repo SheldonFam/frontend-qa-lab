@@ -16,6 +16,7 @@ import type { TestRun } from "../types/run.types.js";
 import type { CreateRunInput } from "../schemas/create-run.schema.js";
 
 import { runAgentScenario } from "../../agent/runtime/agent-scenario-runner.js";
+import { getErrorSummary } from "../../../utils/get-error-summary.js";
 
 // Create a new Run
 export function createRun(input: CreateRunInput): TestRun {
@@ -34,6 +35,7 @@ export function createRun(input: CreateRunInput): TestRun {
     results: [],
     requirements,
     testPlan: null,
+    error: null,
   };
 
   return runRepository.create(testRun);
@@ -127,6 +129,7 @@ export async function executeRun(
     runRepository.update(runId, {
       status: "failed",
       completedAt: new Date().toISOString(),
+      error: getErrorSummary(error),
     });
 
     throw error;

@@ -22,6 +22,7 @@ describe("runRepository", () => {
       results: [],
       requirements: "Test website functionality",
       testPlan: null,
+      error: null,
     };
 
     const result: ScenarioResult = {
@@ -60,6 +61,7 @@ describe("runRepository", () => {
       results: [],
       requirements: "Test website functionality",
       testPlan: null,
+      error: null,
     };
 
     const result1: ScenarioResult = {

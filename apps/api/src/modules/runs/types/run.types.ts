@@ -20,4 +20,5 @@ export type TestRun = {
   results: ScenarioResult[];
   requirements: string;
   testPlan: TestPlan | null;
+  error: string | null;
 };
