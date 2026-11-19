@@ -6,7 +6,7 @@ interface LoadingStateProps {
 
 export function LoadingState({ message = "Loading..." }: LoadingStateProps) {
   return (
-    <Center mih={300}>
+    <Center mih={300} role="status">
       <Stack align="center" gap="sm">
         <Loader size="lg" />
         <Text size="sm" c="dimmed">

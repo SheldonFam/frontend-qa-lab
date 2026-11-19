@@ -5,6 +5,8 @@ import { createTestRun, getTestRun, getTestRuns } from "../api/test-run-api";
 import type { TestRunStatus } from "../types/test-run";
 import { toTestRun } from "../utils/to-test-run";
 
+const TEST_RUNS_KEY = ["test-runs"];
+
 const DETAIL_REFRESH_INTERVAL = 1000;
 const LIST_REFRESH_INTERVAL = 3000;
 
@@ -22,7 +24,7 @@ export function useCreateTestRun() {
 
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: ["test-runs"],
+        queryKey: TEST_RUNS_KEY,
         exact: true,
       });
     },
@@ -31,7 +33,7 @@ export function useCreateTestRun() {
 
 export function useTestRuns() {
   return useQuery({
-    queryKey: ["test-runs"],
+    queryKey: TEST_RUNS_KEY,
     queryFn: async () => {
       const apiRuns = await getTestRuns();
       const testRuns = apiRuns.map(toTestRun);
@@ -59,7 +61,7 @@ export function useTestRuns() {
 
 export function useTestRun(id: string | undefined) {
   return useQuery({
-    queryKey: ["test-runs", id],
+    queryKey: [...TEST_RUNS_KEY, id],
     queryFn: () => {
       if (!id) {
         throw new Error("Test Run ID is missing");

@@ -9,11 +9,23 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, options);
+  let response: Response;
 
-  const body = (await response.json()) as
-    | ApiSuccessResponse<T>
-    | ApiErrorResponse;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, options);
+  } catch {
+    throw new Error("Cannot reach the server. Check that the API is running.");
+  }
+
+  let body: ApiSuccessResponse<T> | ApiErrorResponse;
+
+  try {
+    body = (await response.json()) as ApiSuccessResponse<T> | ApiErrorResponse;
+  } catch {
+    throw new Error(
+      `The server sent an unexpected answer (${response.status}).`,
+    );
+  }
 
   if (!body.success) {
     throw new Error(body.error.message);
@@ -43,7 +55,7 @@ export function getTestRuns(): Promise<ApiTestRun[]> {
 }
 
 export function getTestRun(runId: string): Promise<ApiTestRun> {
-  return request<ApiTestRun>(`/runs/${runId}`);
+  return request<ApiTestRun>(`/runs/${encodeURIComponent(runId)}`);
 }
 
 export function getScenarioScreenshotUrl(

@@ -1,7 +1,9 @@
 import { AppShell, Drawer, useMantineTheme } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { Outlet } from "react-router";
+import { Outlet, useLocation } from "react-router";
 
+import { ErrorBoundary } from "../../components/feedback/error-boundary";
+import { ErrorState } from "../../components/feedback/error-state";
 import { AppSidebar } from "../../components/layout/app-sidebar";
 import { AppHeader } from "../../components/layout/app-header";
 
@@ -10,6 +12,8 @@ const HEADER_HEIGHT = 64;
 
 export function AppLayout() {
   const [opened, handlers] = useDisclosure(false);
+
+  const location = useLocation();
 
   const theme = useMantineTheme();
 
@@ -39,7 +43,18 @@ export function AppLayout() {
 
       {/* Main Content */}
       <AppShell.Main bg="var(--app-page-bg)">
-        <Outlet />
+        <ErrorBoundary
+          key={location.pathname}
+          fallback={
+            <ErrorState
+              title="Something went wrong"
+              message="This page could not be shown. Try reloading it."
+              onRetry={() => window.location.reload()}
+            />
+          }
+        >
+          <Outlet />
+        </ErrorBoundary>
       </AppShell.Main>
 
       {/* Mobile / Tablet Navigation */}

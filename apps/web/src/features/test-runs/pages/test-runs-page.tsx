@@ -13,6 +13,7 @@ import { useTestRuns } from "../hooks/use-test-runs";
 import { LoadingState } from "../../../components/feedback/loading-state";
 import { EmptyState } from "../../../components/feedback/empty-state";
 import { ErrorState } from "../../../components/feedback/error-state";
+import { pluralize } from "../../../utils/pluralize";
 
 export function TestRunsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -92,8 +93,8 @@ export function TestRunsPage() {
                 />
 
                 <Text size="sm" c="dimmed" role="status">
-                  Showing {filteredTestRuns.length} of {testRuns.length} test
-                  runs
+                  Showing {filteredTestRuns.length} of{" "}
+                  {pluralize(testRuns.length, "test run")}
                 </Text>
 
                 <TestRunTable testRuns={filteredTestRuns} />

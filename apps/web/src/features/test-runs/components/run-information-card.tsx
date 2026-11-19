@@ -14,7 +14,9 @@ export function RunInformationCard({ run }: RunInformationCardProps) {
   return (
     <Paper withBorder radius="md" p="lg">
       <Stack gap="sm">
-        <Title order={3}>Run Information</Title>
+        <Title order={2} size="h3">
+          Run Information
+        </Title>
 
         <Text size="sm">Run ID: {run.id}</Text>
 
@@ -27,7 +29,7 @@ export function RunInformationCard({ run }: RunInformationCardProps) {
 
         <Text size="sm">Total Scenarios: {counts.total}</Text>
 
-        <Text size="sm">Completed Results: {counts.completed}</Text>
+        <Text size="sm">Completed Scenarios: {counts.completed}</Text>
       </Stack>
     </Paper>
   );

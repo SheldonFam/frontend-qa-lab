@@ -9,13 +9,13 @@ interface ErrorStateProps {
 
 export function ErrorState({ title, message, onRetry }: ErrorStateProps) {
   return (
-    <Center mih={300}>
+    <Center mih={300} role="alert">
       <Stack align="center" gap="sm" maw={400}>
         <ThemeIcon size={56} radius="xl" color="red" variant="light">
           <AlertCircle size={28} />
         </ThemeIcon>
 
-        <Title order={3} size="h4">
+        <Title order={2} size="h4">
           {title}
         </Title>
 

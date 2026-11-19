@@ -9,7 +9,7 @@ function createScenario(
   viewport: Viewport,
 ): TestScenario {
   return {
-    id: crypto.randomUUID(),
+    id: `${language}-${route}-${viewport.name}`,
     language,
     route,
     viewport,

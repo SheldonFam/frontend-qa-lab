@@ -2,6 +2,14 @@ import type { ApiTestRun } from "../../../types/api";
 import type { TestRun } from "../types/test-run";
 import { getScenarioCounts } from "./get-scenario-counts";
 
+function getRunName(targetUrl: string): string {
+  try {
+    return new URL(targetUrl).hostname;
+  } catch {
+    return targetUrl;
+  }
+}
+
 export function toTestRun(apiRun: ApiTestRun): TestRun {
   const scenarios = apiRun.scenarios;
   const counts = getScenarioCounts(scenarios);
@@ -17,7 +25,7 @@ export function toTestRun(apiRun: ApiTestRun): TestRun {
 
   return {
     id: apiRun.id,
-    name: new URL(apiRun.targetUrl).hostname,
+    name: getRunName(apiRun.targetUrl),
     targetUrl: apiRun.targetUrl,
     status: apiRun.status,
     totalScenarios: counts.total,

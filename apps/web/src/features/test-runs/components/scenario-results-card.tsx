@@ -12,6 +12,7 @@ import {
   Title,
 } from "@mantine/core";
 
+import { LanguageBadge } from "../../../components/language-badge";
 import { StatusBadge } from "../../../components/status-badge";
 import type { ApiScenarioResult, ApiTestScenario } from "../../../types/api";
 
@@ -118,7 +119,9 @@ export function ScenarioResultsCard({
   return (
     <Paper withBorder radius="md" p="lg">
       <Stack gap="md">
-        <Title order={3}>Scenario Results</Title>
+        <Title order={2} size="h3">
+          Scenario Results
+        </Title>
 
         <Table.ScrollContainer minWidth={600}>
           <Table>
@@ -140,7 +143,9 @@ export function ScenarioResultsCard({
 
                 return (
                   <Table.Tr key={scenario.id}>
-                    <Table.Td>{scenario.language}</Table.Td>
+                    <Table.Td>
+                      <LanguageBadge language={scenario.language} />
+                    </Table.Td>
 
                     <Table.Td>{scenario.route}</Table.Td>
 
@@ -159,7 +164,9 @@ export function ScenarioResultsCard({
         </Table.ScrollContainer>
 
         <Stack gap="sm">
-          <Title order={4}>Diagnostic Details</Title>
+          <Title order={3} size="h4">
+            Diagnostic Details
+          </Title>
 
           <Accordion variant="separated">
             {scenarios.map((scenario) => {
@@ -176,7 +183,8 @@ export function ScenarioResultsCard({
                   <Accordion.Control>
                     <Stack gap={4}>
                       <Text fw={500} size="sm">
-                        {scenario.language} · {scenario.route} ·{" "}
+                        {scenario.language.toUpperCase()} · {scenario.route}
+                        {" · "}
                         {scenario.viewport.name}
                       </Text>
 

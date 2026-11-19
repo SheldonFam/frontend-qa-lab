@@ -5,7 +5,7 @@ interface TestRunStatsProps {
     totalRuns: number;
     completedRuns: number;
     failedRuns: number;
-    runningRuns: number;
+    inProgressRuns: number;
   };
 }
 
@@ -31,9 +31,9 @@ export function TestRunStats({ stats }: TestRunStatsProps) {
       color: "red",
     },
     {
-      value: stats.runningRuns,
-      label: "Running",
-      description: "Currently executing",
+      value: stats.inProgressRuns,
+      label: "In Progress",
+      description: "Queued, planning or running",
       color: "blue",
     },
   ];
