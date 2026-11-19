@@ -31,6 +31,24 @@ function getStepDetails(step: ApiTestPlanStep): string {
   return "—";
 }
 
+function getStepScope(step: ApiTestPlanStep): string {
+  if (!step.scope) {
+    return "All scenarios";
+  }
+
+  const parts: string[] = [];
+
+  if (step.scope.routes?.length) {
+    parts.push(`Routes: ${step.scope.routes.join(", ")}`);
+  }
+
+  if (step.scope.languages?.length) {
+    parts.push(`Languages: ${step.scope.languages.join(", ")}`);
+  }
+
+  return parts.join(" · ");
+}
+
 export function TestPlanCard({ testPlan, runStatus }: TestPlanCardProps) {
   return (
     <Paper withBorder radius="md" p="lg">
@@ -51,7 +69,7 @@ export function TestPlanCard({ testPlan, runStatus }: TestPlanCardProps) {
               </Text>
             </Stack>
 
-            <Table.ScrollContainer minWidth={600}>
+            <Table.ScrollContainer minWidth={760}>
               <Table>
                 <Table.Thead>
                   <Table.Tr>
@@ -59,6 +77,7 @@ export function TestPlanCard({ testPlan, runStatus }: TestPlanCardProps) {
                     <Table.Th>Action</Table.Th>
                     <Table.Th>Target</Table.Th>
                     <Table.Th>Value / Expected Result</Table.Th>
+                    <Table.Th>Scope</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
 
@@ -74,6 +93,10 @@ export function TestPlanCard({ testPlan, runStatus }: TestPlanCardProps) {
                       <Table.Td>{getStepTarget(step)}</Table.Td>
 
                       <Table.Td>{getStepDetails(step)}</Table.Td>
+
+                      <Table.Td>
+                        <Text size="sm">{getStepScope(step)}</Text>
+                      </Table.Td>
                     </Table.Tr>
                   ))}
                 </Table.Tbody>
