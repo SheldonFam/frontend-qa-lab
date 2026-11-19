@@ -12,7 +12,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, options);
 
   const body = (await response.json()) as
-    ApiSuccessResponse<T> | ApiErrorResponse;
+    | ApiSuccessResponse<T>
+    | ApiErrorResponse;
 
   if (!body.success) {
     throw new Error(body.error.message);
@@ -43,4 +44,13 @@ export function getTestRuns(): Promise<ApiTestRun[]> {
 
 export function getTestRun(runId: string): Promise<ApiTestRun> {
   return request<ApiTestRun>(`/runs/${runId}`);
+}
+
+export function getScenarioScreenshotUrl(
+  runId: string,
+  scenarioId: string,
+): string {
+  const baseUrl = API_BASE_URL.replace(/\/$/, "");
+
+  return `${baseUrl}/runs/${encodeURIComponent(runId)}/scenarios/${encodeURIComponent(scenarioId)}/screenshot`;
 }

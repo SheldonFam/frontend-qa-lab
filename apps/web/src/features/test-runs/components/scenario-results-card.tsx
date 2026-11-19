@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   Accordion,
   Badge,
@@ -13,7 +15,10 @@ import {
 import { StatusBadge } from "../../../components/status-badge";
 import type { ApiScenarioResult, ApiTestScenario } from "../../../types/api";
 
+import { getScenarioScreenshotUrl } from "../api/test-run-api";
+
 interface ScenarioResultsCardProps {
+  runId: string;
   scenarios: ApiTestScenario[];
   results: ApiScenarioResult[];
 }
@@ -59,7 +64,54 @@ function DiagnosticList({ title, items }: DiagnosticListProps) {
   );
 }
 
+interface ScenarioScreenshotProps {
+  runId: string;
+  scenarioId: string;
+  hasScreenshot: boolean;
+}
+
+function ScenarioScreenshot({
+  runId,
+  scenarioId,
+  hasScreenshot,
+}: ScenarioScreenshotProps) {
+  const [hasError, setHasError] = useState(false);
+
+  if (!hasScreenshot) {
+    return (
+      <Text size="sm" c="dimmed">
+        No screenshot available
+      </Text>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <Text size="sm" c="red">
+        Failed to load screenshot
+      </Text>
+    );
+  }
+
+  return (
+    <img
+      src={getScenarioScreenshotUrl(runId, scenarioId)}
+      alt={`Screenshot for scenario ${scenarioId}`}
+      onError={() => setHasError(true)}
+      style={{
+        display: "block",
+        width: "100%",
+        maxWidth: "800px",
+        height: "auto",
+        borderRadius: "8px",
+        border: "1px solid var(--mantine-color-default-border)",
+      }}
+    />
+  );
+}
+
 export function ScenarioResultsCard({
+  runId,
   scenarios,
   results,
 }: ScenarioResultsCardProps) {
@@ -143,6 +195,18 @@ export function ScenarioResultsCard({
                           <Code block>{result.error}</Code>
                         </Stack>
                       )}
+
+                      <Stack gap="xs">
+                        <Text fw={600} size="sm">
+                          Screenshot
+                        </Text>
+
+                        <ScenarioScreenshot
+                          runId={runId}
+                          scenarioId={scenario.id}
+                          hasScreenshot={Boolean(result.screenshotPath)}
+                        />
+                      </Stack>
 
                       <SimpleGrid cols={{ base: 1, sm: 2 }}>
                         <DiagnosticList
