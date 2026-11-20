@@ -1,9 +1,10 @@
 import type { LLMClient } from "../clients/llm.client.js";
 import { testPlanOutputSchema } from "../schemas/test-plan.schema.js";
 import type { TestPlan } from "../schemas/test-plan.schema.js";
+import { InvalidTestPlanError } from "./invalid-test-plan-error.js";
 import { createTestPlan } from "./test-plan.factory.js";
 import { buildPlannerPrompt } from "./prompt-builder.js";
-import type { PromptInput } from "./prompt-builder.js";
+import type { PlannerPrompt, PromptInput } from "./prompt-builder.js";
 
 const INJECTION_PATTERNS: RegExp[] = [
   /ignore\s+(all\s+)?(previous|prior|above)\s+instructions?/i,
@@ -35,7 +36,33 @@ function containsInjectionLikeContent(value: unknown): boolean {
 
 function assertSafeTestPlan(testPlan: TestPlan): void {
   if (containsInjectionLikeContent(testPlan)) {
-    throw new Error("Unsafe test plan output detected");
+    throw new InvalidTestPlanError(
+      "The AI plan was blocked because it contains unsafe text",
+    );
+  }
+}
+
+function assertScopeMatchesRun(testPlan: TestPlan, input: PromptInput): void {
+  for (const step of testPlan.steps) {
+    if (!step.scope) {
+      continue;
+    }
+
+    for (const route of step.scope.routes ?? []) {
+      if (!input.routes.includes(route)) {
+        throw new InvalidTestPlanError(
+          `The AI plan used a route that is not in this run: "${route}"`,
+        );
+      }
+    }
+
+    for (const language of step.scope.languages ?? []) {
+      if (!input.languages.includes(language)) {
+        throw new InvalidTestPlanError(
+          `The AI plan used a language that is not in this run: "${language}"`,
+        );
+      }
+    }
   }
 }
 
@@ -43,10 +70,24 @@ export function processPlannerOutput(llmResponse: unknown): TestPlan {
   const result = testPlanOutputSchema.safeParse(llmResponse);
 
   if (!result.success) {
-    throw new Error("Invalid test plan output");
+    throw new InvalidTestPlanError("Invalid test plan output");
   }
 
   const testPlan = createTestPlan(result.data);
+
+  return testPlan;
+}
+
+async function requestTestPlan(
+  prompt: PlannerPrompt,
+  input: PromptInput,
+  llmClient: LLMClient,
+): Promise<TestPlan> {
+  const llmResponse = await llmClient.generate(prompt);
+  const testPlan = processPlannerOutput(llmResponse);
+
+  assertScopeMatchesRun(testPlan, input);
+  assertSafeTestPlan(testPlan);
 
   return testPlan;
 }
@@ -57,9 +98,17 @@ export async function generateTestPlan(
 ): Promise<TestPlan> {
   const prompt = buildPlannerPrompt(input);
 
-  const llmResponse = await llmClient.generate(prompt);
-  const testPlan = processPlannerOutput(llmResponse);
-  assertSafeTestPlan(testPlan);
+  try {
+    return await requestTestPlan(prompt, input, llmClient);
+  } catch (error: unknown) {
+    if (!(error instanceof InvalidTestPlanError)) {
+      throw error;
+    }
 
-  return testPlan;
+    console.warn(
+      `The AI returned a bad plan (${error.message}). Trying one more time.`,
+    );
+
+    return requestTestPlan(prompt, input, llmClient);
+  }
 }

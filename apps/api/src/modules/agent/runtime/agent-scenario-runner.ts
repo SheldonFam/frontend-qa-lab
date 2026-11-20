@@ -162,6 +162,10 @@ export async function runAgentScenario(
   let pageLoaded = false;
 
   try {
+    if (testPlan.steps.length === 0) {
+      throw new Error("The test plan has no steps for this scenario");
+    }
+
     // 1. Build the Scenario URL
     url = new URL(scenario.route, configuration.targetUrl).toString();
 

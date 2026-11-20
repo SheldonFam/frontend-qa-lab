@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import OpenAI from "openai";
 
+import { InvalidTestPlanError } from "../service/invalid-test-plan-error.js";
 import { generateTestPlan } from "../service/planner.service.js";
 import type { PlannerPrompt } from "../service/prompt-builder.js";
 import {
@@ -132,6 +133,9 @@ describe("openAILLMClient", () => {
 
     await expect(client.generate(prompt)).rejects.toThrow(
       "The AI returned a plan that is not valid JSON",
+    );
+    await expect(client.generate(prompt)).rejects.toBeInstanceOf(
+      InvalidTestPlanError,
     );
   });
 
