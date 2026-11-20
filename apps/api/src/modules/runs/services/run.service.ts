@@ -16,6 +16,7 @@ import type { TestRun } from "../types/run.types.js";
 import type { CreateRunInput } from "../schemas/create-run.schema.js";
 
 import { runAgentScenario } from "../../agent/runtime/agent-scenario-runner.js";
+import { analyzeFailure } from "../../analysis/failure-analysis.service.js";
 import { getErrorSummary } from "../../../utils/get-error-summary.js";
 
 // Create a new Run
@@ -97,6 +98,14 @@ export async function executeRun(
         runId,
         agentClient,
       );
+
+      if (result.status === "failed") {
+        result.failureAnalysis = await analyzeFailure({
+          scenario,
+          testPlan: scenarioTestPlan,
+          result,
+        });
+      }
 
       // Step 5: Save scenario result
       runRepository.addScenarioResult(runId, result);

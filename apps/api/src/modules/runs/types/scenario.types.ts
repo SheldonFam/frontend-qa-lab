@@ -1,3 +1,4 @@
+import type { FailureAnalysis } from "../../analysis/failure-analysis.schema.js";
 import type { Viewport } from "../schemas/test-configuration.schema.js";
 
 export type TestScenario = {
@@ -33,6 +34,7 @@ export type ScenarioResult = {
   assertions: AssertionResult[];
   agentSteps: AgentStep[];
   agentSummary: string | null;
+  failureAnalysis: FailureAnalysis | null;
   screenshotPath: string | null;
 };
 

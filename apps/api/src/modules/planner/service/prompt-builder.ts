@@ -1,3 +1,5 @@
+import { escapeAngleBrackets } from "../../../utils/escape-angle-brackets.js";
+
 import type { Viewport } from "../../runs/schemas/test-configuration.schema.js";
 
 export type PromptInput = {
@@ -21,10 +23,6 @@ function cleanRequirements(value: string): string {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, MAX_REQUIREMENTS_LENGTH);
-}
-
-function escapeAngleBrackets(value: string): string {
-  return value.replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
 }
 
 export function buildPlannerPrompt(input: PromptInput): PlannerPrompt {
