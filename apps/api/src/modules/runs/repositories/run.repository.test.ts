@@ -37,6 +37,8 @@ describe("runRepository", () => {
       inputs: [],
       buttons: [],
       assertions: [],
+      agentSteps: [],
+      agentSummary: null,
       screenshotPath: null,
     };
 
@@ -76,6 +78,8 @@ describe("runRepository", () => {
       inputs: [],
       buttons: [],
       assertions: [],
+      agentSteps: [],
+      agentSummary: null,
       screenshotPath: null,
     };
 
@@ -91,6 +95,8 @@ describe("runRepository", () => {
       inputs: [],
       buttons: [],
       assertions: [],
+      agentSteps: [],
+      agentSummary: null,
       screenshotPath: null,
     };
 
@@ -118,6 +124,8 @@ describe("runRepository", () => {
       inputs: [],
       buttons: [],
       assertions: [],
+      agentSteps: [],
+      agentSummary: null,
       screenshotPath: null,
     };
 

@@ -16,8 +16,10 @@ import { toolRegistry } from "../registry/tool-registry.js";
 import { convertToolsToDefinitions } from "../utils/tool-schema-converter.js";
 
 import { runAgentLoop, type AgentLoopResult } from "./agent-loop.js";
+import { buildAgentStep } from "./build-agent-step.js";
 
 import type { ToolContext, ToolResult } from "../types/tool.types.js";
+import type { AgentStep } from "../../runs/types/scenario.types.js";
 
 import {
   createBrowserContext,
@@ -42,6 +44,7 @@ type AgentRuntimeSession = {
   page: Page;
   context: BrowserContext;
   diagnostics: ReturnType<typeof createBrowserDiagnostics>;
+  agentSteps: AgentStep[];
   toolContext: ToolContext;
 
   executeTool: (
@@ -87,6 +90,19 @@ export async function createAgentRuntime(
         allowedTools: options.allowedTools,
       });
 
+    const agentSteps: AgentStep[] = [];
+
+    const executeAgentTool = async (
+      toolName: string,
+      args: unknown,
+    ): Promise<ToolResult<unknown>> => {
+      const result = await executeTool(toolName, args);
+
+      agentSteps.push(buildAgentStep(toolName, args, result));
+
+      return result;
+    };
+
     const runAgent = (input: RunAgentInput): Promise<AgentLoopResult> => {
       const registeredTools = toolRegistry
         .getAll()
@@ -98,7 +114,7 @@ export async function createAgentRuntime(
         client: input.client ?? openAIAgentClient,
         messages: input.messages,
         tools: toolDefinitions,
-        executeTool,
+        executeTool: executeAgentTool,
         maxSteps: input.maxSteps,
       });
     };
@@ -107,6 +123,7 @@ export async function createAgentRuntime(
       page,
       context,
       diagnostics,
+      agentSteps,
       toolContext,
       executeTool,
       runAgent,

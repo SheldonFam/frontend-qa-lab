@@ -72,6 +72,8 @@ export async function runAgentScenario(
     inputs: [],
     error: null,
     assertions: [],
+    agentSteps: [],
+    agentSummary: null,
     screenshotPath: null,
   };
 
@@ -108,6 +110,9 @@ export async function runAgentScenario(
       messages,
       maxSteps: MAX_AGENT_STEPS,
     });
+
+    result.agentSteps = [...runtime.agentSteps];
+    result.agentSummary = agentResult.message;
 
     // 6. Collect actual Assertion results
     const assertionResult = buildAssertions(agentResult.messages);
@@ -174,6 +179,7 @@ export async function runAgentScenario(
 
     if (runtime) {
       copyDiagnostics(result, runtime.diagnostics);
+      result.agentSteps = [...runtime.agentSteps];
     }
 
     return result;

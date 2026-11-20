@@ -67,6 +67,8 @@ describe("Runs API Integration", () => {
       inputs: [],
       error: null,
       assertions: [],
+      agentSteps: [],
+      agentSummary: null,
       screenshotPath,
     };
   }
@@ -191,6 +193,8 @@ describe("Runs API Integration", () => {
             message: "Login button is visible",
           },
         ],
+        agentSteps: [],
+        agentSummary: null,
         screenshotPath: null,
       }),
     );
