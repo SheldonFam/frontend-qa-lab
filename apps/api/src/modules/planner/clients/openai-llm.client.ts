@@ -4,6 +4,7 @@ import { z } from "zod";
 import { env } from "../../../config/env.js";
 import { getOpenAIErrorMessage } from "../../../utils/get-openai-error-message.js";
 import { testPlanOutputSchema } from "../schemas/test-plan.schema.js";
+import { InvalidTestPlanError } from "../service/invalid-test-plan-error.js";
 import type { LLMClient } from "./llm.client.js";
 
 export type OpenAIResponsesClient = Pick<OpenAI, "responses">;
@@ -12,7 +13,9 @@ function parsePlanText(text: string): unknown {
   try {
     return JSON.parse(text);
   } catch {
-    throw new Error("The AI returned a plan that is not valid JSON");
+    throw new InvalidTestPlanError(
+      "The AI returned a plan that is not valid JSON",
+    );
   }
 }
 

@@ -47,7 +47,13 @@ const testPlan: TestPlan = {
   id: "plan-1",
   name: "Home page",
   description: "Check the home page.",
-  steps: [],
+  steps: [
+    {
+      id: "step-1",
+      action: "assert_url",
+      expectedResult: "/",
+    },
+  ],
 };
 
 const expectedScreenshotPath = path.join(
@@ -142,6 +148,26 @@ describe("runAgentScenario", () => {
     expect(result.screenshotPath).toBeNull();
     expect(runtime.page.screenshot).not.toHaveBeenCalled();
     expect(runtime.runAgent).not.toHaveBeenCalled();
+  });
+
+  it("should fail without opening the page when the plan has no steps for the scenario", async () => {
+    const emptyTestPlan: TestPlan = {
+      ...testPlan,
+      steps: [],
+    };
+
+    const result = await runAgentScenario(
+      browser,
+      configuration,
+      scenario,
+      emptyTestPlan,
+      "run-1",
+    );
+
+    expect(result.status).toBe("failed");
+    expect(result.error).toBe("The test plan has no steps for this scenario");
+    expect(result.screenshotPath).toBeNull();
+    expect(createAgentRuntime).not.toHaveBeenCalled();
   });
 
   it("should return a relative screenshot path when the scenario passes", async () => {
