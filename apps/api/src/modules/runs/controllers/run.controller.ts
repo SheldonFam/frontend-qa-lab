@@ -1,12 +1,8 @@
 import type { RequestHandler } from "express";
 
 import { createRunInputSchema } from "../schemas/create-run.schema.js";
-import {
-  createRun,
-  executeRun,
-  getAllRuns,
-  getRun,
-} from "../services/run.service.js";
+import { addRunToQueue } from "../services/run-queue.js";
+import { createRun, getAllRuns, getRun } from "../services/run.service.js";
 
 const MAX_SCENARIOS_PER_RUN = 30;
 
@@ -50,9 +46,7 @@ export const createRunController: RequestHandler = (req, res) => {
   });
 
   // Execute the Run in the background
-  executeRun(testRun.id, result.data).catch((error: unknown) => {
-    console.error(`Failed to execute run ${testRun.id}:`, error);
-  });
+  addRunToQueue(testRun.id, result.data);
 };
 
 export const getRunController: RequestHandler<{ id: string }> = (req, res) => {
