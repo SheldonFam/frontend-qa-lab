@@ -13,7 +13,9 @@
     "lint:api": "pnpm --filter @frontend-qa-lab/api lint",
     "test": "pnpm test:web && pnpm test:api",
     "test:web": "pnpm --filter @frontend-qa-lab/web test",
-    "test:api": "pnpm --filter @frontend-qa-lab/api test"
+    "test:api": "pnpm --filter @frontend-qa-lab/api test",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
   },
   "keywords": [],
   "author": "",
@@ -26,5 +28,8 @@
     }
   },
   "packageManager": "pnpm@12.18.0",
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "prettier": "3.10.1"
+  }
 }
