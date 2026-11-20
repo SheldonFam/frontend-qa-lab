@@ -2,7 +2,7 @@ import OpenAI from "openai";
 
 import { env } from "../../../config/env.js";
 import { getOpenAIErrorMessage } from "../../../utils/get-openai-error-message.js";
-import type { AgentClient, AgentMessage } from "./agent-client.js";
+import type { AgentClient } from "./agent-client.js";
 
 export type OpenAIResponsesClient = Pick<OpenAI, "responses">;
 

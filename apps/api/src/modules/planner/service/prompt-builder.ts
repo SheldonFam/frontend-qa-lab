@@ -17,7 +17,7 @@ const MAX_REQUIREMENTS_LENGTH = 2000;
 
 function cleanRequirements(value: string): string {
   return value
-    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/\p{Cc}/gu, " ")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, MAX_REQUIREMENTS_LENGTH);

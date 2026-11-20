@@ -2,10 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createServer, type Server } from "node:http";
 import { access } from "node:fs/promises";
 
-import type {
-  AgentClient,
-  AgentMessage,
-} from "../src/modules/agent/clients/agent-client.js";
+import type { AgentClient } from "../src/modules/agent/clients/agent-client.js";
 
 import {
   createRun,

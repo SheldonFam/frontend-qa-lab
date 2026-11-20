@@ -32,6 +32,7 @@ Thumbs.db
 # Testing artifacts
 playwright-report/
 test-results/
+apps/api/screenshots/
 
 # Temporary files
 *.tmp

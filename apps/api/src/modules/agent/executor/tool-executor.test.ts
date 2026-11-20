@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { toolExecutor } from "./tool-executor.js";
 import { z } from "zod";
 import type { Tool } from "../types/tool.types.js";

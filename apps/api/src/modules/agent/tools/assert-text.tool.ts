@@ -29,7 +29,8 @@ export const assertTextTool: Tool<
   AssertTextResult
 > = {
   name: "assert_text",
-  description: "Check whether a webpage element contains the expected text.",
+  description:
+    "Check whether the text of a webpage element exactly matches the expected text.",
   parameters: assertTextParameters,
 
   execute: async ({ role, expectedText }, { page }) => {

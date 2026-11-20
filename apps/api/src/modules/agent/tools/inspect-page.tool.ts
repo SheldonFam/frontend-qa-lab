@@ -39,11 +39,16 @@ type InspectPageResult = {
   }[];
 };
 
-export const inspectPageTool: Tool<{}, InspectPageResult> = {
+const inspectPageParameters = z.strictObject({});
+
+export const inspectPageTool: Tool<
+  z.infer<typeof inspectPageParameters>,
+  InspectPageResult
+> = {
   name: "inspect_page",
   description:
     "Inspect the current webpage and retrieve its URL, title, headings, buttons, links, and form elements.",
-  parameters: z.strictObject({}),
+  parameters: inspectPageParameters,
 
   execute: async (_args, context) => {
     const { page } = context;
