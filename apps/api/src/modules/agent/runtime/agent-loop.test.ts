@@ -138,27 +138,23 @@ describe("runAgentLoop", () => {
 
   it("should stop when maxSteps is reached", async () => {
     const client: AgentClient = {
-      generateResponse: vi.fn(
-        async (): Promise<AgentClientResponse> => ({
-          type: "tool_calls",
-          toolCalls: [
-            {
-              id: "call_001",
-              name: "inspect_page",
-              arguments: {},
-            },
-          ],
-        }),
-      ),
+      generateResponse: vi.fn(async (): Promise<AgentClientResponse> => ({
+        type: "tool_calls",
+        toolCalls: [
+          {
+            id: "call_001",
+            name: "inspect_page",
+            arguments: {},
+          },
+        ],
+      })),
     };
 
-    const executeTool = vi.fn(
-      async (): Promise<ToolResult<unknown>> => ({
-        success: true,
-        data: {},
-        error: null,
-      }),
-    );
+    const executeTool = vi.fn(async (): Promise<ToolResult<unknown>> => ({
+      success: true,
+      data: {},
+      error: null,
+    }));
 
     const result = await runAgentLoop({
       client,

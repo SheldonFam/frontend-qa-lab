@@ -1,11 +1,6 @@
 // Run Status
 export type ApiRunStatus =
-  | "queued"
-  | "planning"
-  | "running"
-  | "completed"
-  | "failed"
-  | "cancelled";
+  "queued" | "planning" | "running" | "completed" | "failed" | "cancelled";
 
 // Scenario Status
 export type ApiScenarioStatus = "pending" | "passed" | "failed";
