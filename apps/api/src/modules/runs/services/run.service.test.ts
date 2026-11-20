@@ -73,6 +73,8 @@ describe("executeRun", () => {
       inputs: [],
       buttons: [],
       assertions: [],
+      agentSteps: [],
+      agentSummary: null,
       screenshotPath: null,
     };
 
@@ -120,6 +122,8 @@ describe("executeRun", () => {
       inputs: [],
       buttons: [],
       assertions: [],
+      agentSteps: [],
+      agentSummary: null,
       screenshotPath: null,
     };
 
@@ -280,6 +284,8 @@ describe("executeRun", () => {
         inputs: [],
         error: null,
         assertions: [],
+        agentSteps: [],
+        agentSummary: null,
         screenshotPath: null,
       }),
     );

@@ -31,6 +31,8 @@ export type ScenarioResult = {
 
   error: string | null;
   assertions: AssertionResult[];
+  agentSteps: AgentStep[];
+  agentSummary: string | null;
   screenshotPath: string | null;
 };
 
@@ -38,4 +40,12 @@ export type AssertionResult = {
   name: string;
   passed: boolean;
   message: string;
+};
+
+export type AgentStep = {
+  tool: string;
+  arguments: unknown;
+  success: boolean;
+  passed: boolean | null;
+  error: string | null;
 };

@@ -5,7 +5,10 @@ import type { Browser } from "playwright";
 
 import type { TestPlan } from "../../planner/schemas/test-plan.schema.js";
 import type { TestConfiguration } from "../../runs/schemas/test-configuration.schema.js";
-import type { TestScenario } from "../../runs/types/scenario.types.js";
+import type {
+  AgentStep,
+  TestScenario,
+} from "../../runs/types/scenario.types.js";
 
 import { createAgentRuntime } from "./agent-runtime.js";
 import { runAgentScenario } from "./agent-scenario-runner.js";
@@ -63,6 +66,8 @@ const expectedScreenshotPath = path.join(
 );
 
 function createRuntime() {
+  const agentSteps: AgentStep[] = [];
+
   return {
     page: {
       goto: vi.fn().mockResolvedValue(null),
@@ -73,6 +78,7 @@ function createRuntime() {
       pageErrors: [],
       failedRequests: [],
     },
+    agentSteps,
     runAgent: vi.fn(),
     executeTool: vi.fn().mockResolvedValue({
       success: false,
@@ -224,5 +230,82 @@ describe("runAgentScenario", () => {
     expect(result.error).toBeNull();
     expect(result.screenshotPath).toBe(expectedScreenshotPath);
     expect(path.isAbsolute(expectedScreenshotPath)).toBe(false);
+  });
+
+  it("should save the steps and the summary of the agent", async () => {
+    const runtime = createRuntime();
+
+    const step: AgentStep = {
+      tool: "assert_url",
+      arguments: {
+        expectedPath: "/",
+      },
+      success: true,
+      passed: true,
+      error: null,
+    };
+
+    runtime.agentSteps.push(step);
+
+    runtime.runAgent.mockResolvedValue({
+      status: "completed",
+      message: "The home page opened at the expected address.",
+      steps: 1,
+      messages: [],
+    });
+
+    vi.mocked(createAgentRuntime).mockResolvedValue(
+      runtime as unknown as AgentRuntime,
+    );
+
+    const result = await runAgentScenario(
+      browser,
+      configuration,
+      scenario,
+      testPlan,
+      "run-1",
+    );
+
+    expect(result.agentSteps).toEqual([step]);
+    expect(result.agentSummary).toBe(
+      "The home page opened at the expected address.",
+    );
+  });
+
+  it("should keep the steps and have no summary when the AI step fails", async () => {
+    const runtime = createRuntime();
+
+    const step: AgentStep = {
+      tool: "click_element",
+      arguments: {
+        role: "button",
+        name: "Login",
+      },
+      success: true,
+      passed: null,
+      error: null,
+    };
+
+    runtime.agentSteps.push(step);
+
+    runtime.runAgent.mockRejectedValue(
+      new Error("The AI service usage limit was reached. Try again later."),
+    );
+
+    vi.mocked(createAgentRuntime).mockResolvedValue(
+      runtime as unknown as AgentRuntime,
+    );
+
+    const result = await runAgentScenario(
+      browser,
+      configuration,
+      scenario,
+      testPlan,
+      "run-1",
+    );
+
+    expect(result.status).toBe("failed");
+    expect(result.agentSteps).toEqual([step]);
+    expect(result.agentSummary).toBeNull();
   });
 });

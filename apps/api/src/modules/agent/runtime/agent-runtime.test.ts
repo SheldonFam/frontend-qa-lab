@@ -226,4 +226,65 @@ describe("Agent Runtime", () => {
       await runtime.close();
     }
   });
+
+  it("should record the tools that the agent runs", async () => {
+    const runtime = await createAgentRuntime(browser, {
+      runId: "run-7",
+      scenarioId: "scenario-7",
+      viewport: {
+        width: 1280,
+        height: 720,
+      },
+      allowedTools: ["inspect_page", "assert_visible"],
+    });
+
+    try {
+      await runtime.page.setContent(`
+        <html>
+          <head>
+            <title>Agent Steps Test</title>
+          </head>
+          <body>
+            <h1>Welcome</h1>
+            <button>Login</button>
+          </body>
+        </html>
+      `);
+
+      await runtime.runAgent({
+        client: createMockAgentClient(),
+        messages: [
+          {
+            role: "user",
+            content: "Inspect the page and check whether Login is visible.",
+          },
+        ],
+        maxSteps: 5,
+      });
+
+      await runtime.executeTool("inspect_page", {});
+
+      expect(runtime.agentSteps).toEqual([
+        {
+          tool: "inspect_page",
+          arguments: {},
+          success: true,
+          passed: null,
+          error: null,
+        },
+        {
+          tool: "assert_visible",
+          arguments: {
+            role: "button",
+            name: "Login",
+          },
+          success: true,
+          passed: true,
+          error: null,
+        },
+      ]);
+    } finally {
+      await runtime.close();
+    }
+  });
 });
