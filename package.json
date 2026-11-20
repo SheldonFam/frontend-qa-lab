@@ -6,8 +6,14 @@
   "main": "index.js",
   "scripts": {
     "dev": "pnpm --filter @frontend-qa-lab/web dev",
+    "dev:api": "pnpm --filter @frontend-qa-lab/api dev",
     "build": "pnpm --filter @frontend-qa-lab/web build",
-    "lint": "pnpm --filter @frontend-qa-lab/web lint"
+    "lint": "pnpm lint:web && pnpm lint:api",
+    "lint:web": "pnpm --filter @frontend-qa-lab/web lint",
+    "lint:api": "pnpm --filter @frontend-qa-lab/api lint",
+    "test": "pnpm test:web && pnpm test:api",
+    "test:web": "pnpm --filter @frontend-qa-lab/web test",
+    "test:api": "pnpm --filter @frontend-qa-lab/api test"
   },
   "keywords": [],
   "author": "",

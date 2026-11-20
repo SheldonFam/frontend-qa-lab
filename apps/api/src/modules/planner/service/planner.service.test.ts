@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { InvalidTestPlanError } from "./invalid-test-plan-error.js";
 import { generateTestPlan, processPlannerOutput } from "./planner.service.js";
-import { PlannerPrompt, PromptInput } from "./prompt-builder.js";
+import { PromptInput } from "./prompt-builder.js";
 import { mockLLMClient } from "../clients/mock-llm.client.js";
 import { LLMClient } from "../clients/llm.client.js";
 
@@ -76,11 +76,6 @@ describe("processPlannerOutput", () => {
   });
 
   it("should generate a test plan using the injected LLM client", async () => {
-    const prompt: PlannerPrompt = {
-      systemPrompt: "You are a QA Test Planner.",
-      userPrompt: "Test the login functionality.",
-    };
-
     const result = await generateTestPlan(promptInput, mockLLMClient);
 
     expect(result.name).toBe("Sample plan (mock planner)");
@@ -94,11 +89,6 @@ describe("processPlannerOutput", () => {
   });
 
   it("should reject invalid LLM output", async () => {
-    const prompt: PlannerPrompt = {
-      systemPrompt: "You are a QA Test Planner.",
-      userPrompt: "Test the login functionality.",
-    };
-
     const invalidLLMClient: LLMClient = {
       async generate() {
         return {
@@ -268,5 +258,34 @@ describe("generateTestPlan retry", () => {
       "The AI service usage limit was reached. Try again later.",
     );
     expect(generate).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("generateTestPlan empty plan", () => {
+  const emptyPlan = {
+    name: "Default Test Plan",
+    description: "Generated test plan based on provided configuration.",
+    steps: [],
+  };
+
+  it("should reject a plan that has no steps", async () => {
+    const { client, generate } = createPlanClient([emptyPlan, emptyPlan]);
+
+    await expect(generateTestPlan(checkInput, client)).rejects.toThrow(
+      "The AI returned a plan with no steps",
+    );
+    expect(generate).toHaveBeenCalledTimes(2);
+  });
+
+  it("should try one more time when the first plan has no steps", async () => {
+    const { client, generate } = createPlanClient([
+      emptyPlan,
+      createPlan({ languages: ["zh"] }),
+    ]);
+
+    const result = await generateTestPlan(checkInput, client);
+
+    expect(result.steps).toHaveLength(1);
+    expect(generate).toHaveBeenCalledTimes(2);
   });
 });

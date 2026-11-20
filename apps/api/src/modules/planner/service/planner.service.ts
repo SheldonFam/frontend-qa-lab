@@ -42,6 +42,12 @@ function assertSafeTestPlan(testPlan: TestPlan): void {
   }
 }
 
+function assertPlanHasSteps(testPlan: TestPlan): void {
+  if (testPlan.steps.length === 0) {
+    throw new InvalidTestPlanError("The AI returned a plan with no steps");
+  }
+}
+
 function assertScopeMatchesRun(testPlan: TestPlan, input: PromptInput): void {
   for (const step of testPlan.steps) {
     if (!step.scope) {
@@ -86,6 +92,7 @@ async function requestTestPlan(
   const llmResponse = await llmClient.generate(prompt);
   const testPlan = processPlannerOutput(llmResponse);
 
+  assertPlanHasSteps(testPlan);
   assertScopeMatchesRun(testPlan, input);
   assertSafeTestPlan(testPlan);
 

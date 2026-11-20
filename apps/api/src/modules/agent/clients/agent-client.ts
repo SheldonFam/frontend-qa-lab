@@ -1,5 +1,3 @@
-import type { z } from "zod";
-
 // 1. Messages sent to the LLM
 export type AgentMessage =
   | {

@@ -156,7 +156,7 @@ export async function runAgentScenario(
   let assertions: ScenarioResult["assertions"] = [];
 
   let screenshotPath: string | null = null;
-  let error: string | null = null;
+  let error: string | null;
 
   let runtime: Awaited<ReturnType<typeof createAgentRuntime>> | undefined;
   let pageLoaded = false;
