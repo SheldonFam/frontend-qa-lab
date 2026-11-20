@@ -243,6 +243,81 @@ describe("Runs API Integration", () => {
     expect(browser.close).toHaveBeenCalledOnce();
   });
 
+  it("should keep a second run queued until the first run is finished", async () => {
+    const input = {
+      configuration: {
+        targetUrl: "https://example.com",
+        languages: ["en"],
+        routes: ["/"],
+        viewports: [
+          {
+            name: "desktop",
+            width: 1280,
+            height: 720,
+          },
+        ],
+      },
+      requirements: "Test login functionality",
+    };
+
+    const browser = {
+      close: vi.fn().mockResolvedValue(undefined),
+    } as unknown as Browser;
+
+    vi.mocked(launchBrowser).mockResolvedValue(browser);
+
+    let finishFirstScenario: () => void = () => {};
+
+    const firstScenarioIsFinished = new Promise<void>((resolve) => {
+      finishFirstScenario = resolve;
+    });
+
+    vi.mocked(runAgentScenario)
+      .mockImplementationOnce(async (_browser, _config, scenario) => {
+        await firstScenarioIsFinished;
+
+        return createScreenshotResult(scenario.id, null);
+      })
+      .mockImplementation(async (_browser, _config, scenario) =>
+        createScreenshotResult(scenario.id, null),
+      );
+
+    async function startRun(): Promise<string> {
+      const response = await fetch(`${baseUrl}/runs`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(input),
+      });
+
+      const body = await response.json();
+
+      expect(response.status).toBe(202);
+
+      return body.data.id;
+    }
+
+    const firstRunId = await startRun();
+    const secondRunId = await startRun();
+
+    await vi.waitFor(() => {
+      expect(runRepository.findById(firstRunId)?.status).toBe("running");
+    });
+
+    expect(runRepository.findById(secondRunId)?.status).toBe("queued");
+    expect(runAgentScenario).toHaveBeenCalledTimes(1);
+
+    finishFirstScenario();
+
+    await vi.waitFor(() => {
+      expect(runRepository.findById(firstRunId)?.status).toBe("completed");
+      expect(runRepository.findById(secondRunId)?.status).toBe("completed");
+    });
+
+    expect(runAgentScenario).toHaveBeenCalledTimes(2);
+  });
+
   it("should return a screenshot when it exists", async () => {
     const runId = `screenshot-test-${Date.now()}`;
     const scenarioId = "scenario-1";
