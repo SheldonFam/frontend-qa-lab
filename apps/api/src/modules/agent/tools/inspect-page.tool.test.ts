@@ -81,8 +81,6 @@ describe("inspectPageTool", () => {
       {
         text: "Forgot Password?",
         href: "/forgot-password",
-        target: "_blank",
-        isVisible: true,
       },
     ]);
 
@@ -112,5 +110,91 @@ describe("inspectPageTool", () => {
         }),
       ]),
     );
+  });
+
+  it("should list only visible links that have text", async () => {
+    await page.setContent(`
+      <a href="/visible">Visible link</a>
+      <a href="/hidden" style="display: none">Hidden link</a>
+      <a href="/empty"></a>
+    `);
+
+    const result = await inspectPageTool.execute({}, { page });
+
+    if (!result.success) {
+      throw new Error(result.error.message);
+    }
+
+    expect(result.data.links).toEqual([
+      {
+        text: "Visible link",
+        href: "/visible",
+      },
+    ]);
+
+    expect(result.data.metadata).toEqual({
+      totalLinks: 3,
+      collectedLinks: 1,
+      truncated: false,
+    });
+  });
+
+  it("should list at most 50 links and say when there are more", async () => {
+    const manyLinks = Array.from(
+      { length: 60 },
+      (_, index) => `<a href="/page-${index}">Page ${index}</a>`,
+    ).join(" ");
+
+    await page.setContent(manyLinks);
+
+    const result = await inspectPageTool.execute({}, { page });
+
+    if (!result.success) {
+      throw new Error(result.error.message);
+    }
+
+    expect(result.data.links).toHaveLength(50);
+
+    expect(result.data.metadata).toEqual({
+      totalLinks: 60,
+      collectedLinks: 50,
+      truncated: true,
+    });
+  });
+
+  it("should use a short address for links on the same website", async () => {
+    await page.route("https://shop.test/**", (route) =>
+      route.fulfill({
+        contentType: "text/html",
+        body: `
+          <a href="/cart">Cart</a>
+          <a href="https://shop.test/help?topic=pay#fees">Help</a>
+          <a href="https://other.test/partners">Partners</a>
+        `,
+      }),
+    );
+
+    await page.goto("https://shop.test/");
+
+    const result = await inspectPageTool.execute({}, { page });
+
+    if (!result.success) {
+      throw new Error(result.error.message);
+    }
+
+    expect(result.data.links).toEqual([
+      {
+        text: "Cart",
+        href: "/cart",
+      },
+      {
+        text: "Help",
+        href: "/help?topic=pay#fees",
+      },
+      {
+        text: "Partners",
+        href: "https://other.test/partners",
+      },
+    ]);
   });
 });
