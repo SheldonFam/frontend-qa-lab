@@ -8,41 +8,22 @@ import { takeScreenshotTool } from "./tools/take-screenshot.tool.js";
 import { getConsoleErrorsTool } from "./tools/get-console-errors.tool.js";
 import { clickElementTool } from "./tools/click-element.tool.js";
 import { getFailedRequestsTool } from "./tools/get-failed-requests.tool.js";
+import type { Tool } from "./types/tool.types.js";
+
+function registerOnce<TArgs, TResult>(tool: Tool<TArgs, TResult>): void {
+  if (!toolRegistry.has(tool.name)) {
+    toolRegistry.register(tool);
+  }
+}
 
 export function registerAgentTools(): void {
-  if (!toolRegistry.has(inspectPageTool.name)) {
-    toolRegistry.register(inspectPageTool);
-  }
-
-  if (!toolRegistry.has(fillInputTool.name)) {
-    toolRegistry.register(fillInputTool);
-  }
-
-  if (!toolRegistry.has(assertVisibleTool.name)) {
-    toolRegistry.register(assertVisibleTool);
-  }
-
-  if (!toolRegistry.has(assertTextTool.name)) {
-    toolRegistry.register(assertTextTool);
-  }
-
-  if (!toolRegistry.has(assertUrlTool.name)) {
-    toolRegistry.register(assertUrlTool);
-  }
-
-  if (!toolRegistry.has(takeScreenshotTool.name)) {
-    toolRegistry.register(takeScreenshotTool);
-  }
-
-  if (!toolRegistry.has(getConsoleErrorsTool.name)) {
-    toolRegistry.register(getConsoleErrorsTool);
-  }
-
-  if (!toolRegistry.has(getFailedRequestsTool.name)) {
-    toolRegistry.register(getFailedRequestsTool);
-  }
-
-  if (!toolRegistry.has(clickElementTool.name)) {
-    toolRegistry.register(clickElementTool);
-  }
+  registerOnce(inspectPageTool);
+  registerOnce(fillInputTool);
+  registerOnce(assertVisibleTool);
+  registerOnce(assertTextTool);
+  registerOnce(assertUrlTool);
+  registerOnce(takeScreenshotTool);
+  registerOnce(getConsoleErrorsTool);
+  registerOnce(getFailedRequestsTool);
+  registerOnce(clickElementTool);
 }

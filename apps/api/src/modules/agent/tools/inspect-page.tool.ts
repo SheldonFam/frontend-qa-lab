@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import type { Tool } from "../types/tool.types.js";
 
+const MAX_LINKS = 50;
+
 type InspectPageResult = {
   url: string;
   title: string;
@@ -18,8 +20,6 @@ type InspectPageResult = {
   links: {
     text: string;
     href: string | null;
-    target: string | null;
-    isVisible: boolean;
   }[];
   metadata: {
     totalLinks: number;
@@ -86,24 +86,37 @@ export const inspectPageTool: Tool<
 
     const totalLinks = await page.locator("a").count();
 
-    const links = await page.locator("a").evaluateAll((elements) =>
-      elements.slice(0, 100).map((element) => {
+    const visibleLinks = await page.locator("a").evaluateAll((elements) =>
+      elements.flatMap((element) => {
         const link = element as HTMLAnchorElement;
         const style = window.getComputedStyle(link);
         const rect = link.getBoundingClientRect();
+        const text = link.textContent?.trim() ?? "";
 
-        return {
-          text: link.textContent?.trim() ?? "",
-          href: link.href || null,
-          target: link.getAttribute("target"),
-          isVisible:
-            rect.width > 0 &&
-            rect.height > 0 &&
-            style.visibility !== "hidden" &&
-            style.visibility !== "collapse",
-        };
+        const isVisible =
+          rect.width > 0 &&
+          rect.height > 0 &&
+          style.visibility !== "hidden" &&
+          style.visibility !== "collapse";
+
+        if (!isVisible || text.length === 0) {
+          return [];
+        }
+
+        const isSameWebsite = link.origin === window.location.origin;
+
+        return [
+          {
+            text,
+            href: isSameWebsite
+              ? `${link.pathname}${link.search}${link.hash}`
+              : link.href || null,
+          },
+        ];
       }),
     );
+
+    const links = visibleLinks.slice(0, MAX_LINKS);
 
     const formElements = await page
       .locator("input:visible, textarea:visible, select:visible")
@@ -162,7 +175,7 @@ export const inspectPageTool: Tool<
         metadata: {
           totalLinks,
           collectedLinks: links.length,
-          truncated: totalLinks > links.length,
+          truncated: visibleLinks.length > links.length,
         },
         formElements,
       },
