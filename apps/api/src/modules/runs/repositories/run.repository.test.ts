@@ -39,6 +39,7 @@ describe("runRepository", () => {
       assertions: [],
       agentSteps: [],
       agentSummary: null,
+      failureAnalysis: null,
       screenshotPath: null,
     };
 
@@ -80,6 +81,7 @@ describe("runRepository", () => {
       assertions: [],
       agentSteps: [],
       agentSummary: null,
+      failureAnalysis: null,
       screenshotPath: null,
     };
 
@@ -97,6 +99,7 @@ describe("runRepository", () => {
       assertions: [],
       agentSteps: [],
       agentSummary: null,
+      failureAnalysis: null,
       screenshotPath: null,
     };
 
@@ -126,6 +129,7 @@ describe("runRepository", () => {
       assertions: [],
       agentSteps: [],
       agentSummary: null,
+      failureAnalysis: null,
       screenshotPath: null,
     };
 

@@ -69,6 +69,7 @@ describe("Runs API Integration", () => {
       assertions: [],
       agentSteps: [],
       agentSummary: null,
+      failureAnalysis: null,
       screenshotPath,
     };
   }
@@ -195,6 +196,7 @@ describe("Runs API Integration", () => {
         ],
         agentSteps: [],
         agentSummary: null,
+        failureAnalysis: null,
         screenshotPath: null,
       }),
     );

@@ -74,6 +74,7 @@ export async function runAgentScenario(
     assertions: [],
     agentSteps: [],
     agentSummary: null,
+    failureAnalysis: null,
     screenshotPath: null,
   };
 

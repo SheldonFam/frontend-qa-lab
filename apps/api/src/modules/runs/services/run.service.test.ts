@@ -3,6 +3,7 @@ import type { Browser } from "playwright";
 
 import { launchBrowser } from "../../../browser/browser-manager.js";
 import { runAgentScenario } from "../../agent/runtime/agent-scenario-runner.js";
+import { analyzeFailure } from "../../analysis/failure-analysis.service.js";
 
 import { runRepository } from "../repositories/run.repository.js";
 
@@ -23,10 +24,15 @@ vi.mock("../../agent/runtime/agent-scenario-runner.js", () => ({
   runAgentScenario: vi.fn(),
 }));
 
+vi.mock("../../analysis/failure-analysis.service.js", () => ({
+  analyzeFailure: vi.fn(),
+}));
+
 describe("executeRun", () => {
   beforeEach(() => {
     runRepository.clear();
     vi.clearAllMocks();
+    vi.mocked(analyzeFailure).mockResolvedValue(null);
   });
 
   const configuration: TestConfiguration = {
@@ -75,6 +81,7 @@ describe("executeRun", () => {
       assertions: [],
       agentSteps: [],
       agentSummary: null,
+      failureAnalysis: null,
       screenshotPath: null,
     };
 
@@ -95,6 +102,7 @@ describe("executeRun", () => {
 
     expect(launchBrowser).toHaveBeenCalledOnce();
     expect(runAgentScenario).toHaveBeenCalledOnce();
+    expect(analyzeFailure).not.toHaveBeenCalled();
 
     expect(browser.close).toHaveBeenCalledOnce();
 
@@ -124,6 +132,7 @@ describe("executeRun", () => {
       assertions: [],
       agentSteps: [],
       agentSummary: null,
+      failureAnalysis: null,
       screenshotPath: null,
     };
 
@@ -141,6 +150,57 @@ describe("executeRun", () => {
     expect(updatedRun?.results).toEqual([result]);
 
     expect(browser.close).toHaveBeenCalledOnce();
+  });
+
+  it("should save the AI analysis of a failed scenario", async () => {
+    const run = createRun(input);
+    const scenario = run.scenarios[0]!;
+
+    const browser = {
+      close: vi.fn().mockResolvedValue(undefined),
+    } as unknown as Browser;
+
+    const result: ScenarioResult = {
+      scenarioId: scenario.id,
+      status: "failed",
+      url: "https://example.com/",
+      title: "Example Domain",
+      consoleErrors: [],
+      pageErrors: [],
+      error: "Login assertion failed",
+      failedRequests: [],
+      inputs: [],
+      buttons: [],
+      assertions: [],
+      agentSteps: [],
+      agentSummary: null,
+      failureAnalysis: null,
+      screenshotPath: null,
+    };
+
+    const failureAnalysis = {
+      analysis: "The Login button was not visible on the page.",
+      suggestedAction: "Check that the Login button is shown on the page.",
+    };
+
+    vi.mocked(launchBrowser).mockResolvedValue(browser);
+    vi.mocked(runAgentScenario).mockResolvedValue(result);
+    vi.mocked(analyzeFailure).mockResolvedValue(failureAnalysis);
+
+    await executeRun(run.id, input);
+
+    const updatedRun = runRepository.findById(run.id);
+
+    expect(analyzeFailure).toHaveBeenCalledOnce();
+    expect(analyzeFailure).toHaveBeenCalledWith({
+      scenario,
+      testPlan: expect.objectContaining({
+        name: "Sample plan (mock planner)",
+      }),
+      result,
+    });
+    expect(updatedRun?.results[0]?.failureAnalysis).toEqual(failureAnalysis);
+    expect(updatedRun?.scenarios[0]?.status).toBe("failed");
   });
 
   it("should mark the run as failed when browser launch fails", async () => {
@@ -286,6 +346,7 @@ describe("executeRun", () => {
         assertions: [],
         agentSteps: [],
         agentSummary: null,
+        failureAnalysis: null,
         screenshotPath: null,
       }),
     );
@@ -357,6 +418,7 @@ describe("executeRun failure reason", () => {
   beforeEach(() => {
     runRepository.clear();
     vi.clearAllMocks();
+    vi.mocked(analyzeFailure).mockResolvedValue(null);
   });
 
   const input: CreateRunInput = {
