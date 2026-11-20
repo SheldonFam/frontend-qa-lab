@@ -17,80 +17,61 @@ const testPlanStepScopeSchema = z
 const navigateStepSchema = z.strictObject({
   action: z.literal("navigate"),
   target: z.string(),
+  scope: testPlanStepScopeSchema.optional(),
 });
 
 const clickStepSchema = z.strictObject({
   action: z.literal("click"),
   target: z.string(),
+  scope: testPlanStepScopeSchema.optional(),
 });
 
 const fillStepSchema = z.strictObject({
   action: z.literal("fill"),
   target: z.string(),
   value: z.string(),
+  scope: testPlanStepScopeSchema.optional(),
 });
 
 const assertVisibleStepSchema = z.strictObject({
   action: z.literal("assert_visible"),
   target: z.string(),
+  scope: testPlanStepScopeSchema.optional(),
 });
 
 const assertTextStepSchema = z.strictObject({
   action: z.literal("assert_text"),
   target: z.string(),
   expectedResult: z.string(),
+  scope: testPlanStepScopeSchema.optional(),
 });
 
 const assertUrlStepSchema = z.strictObject({
   action: z.literal("assert_url"),
   expectedResult: z.string(),
-});
-
-// 3. Add Optional Scope
-const navigateStepWithScopeSchema = navigateStepSchema.extend({
   scope: testPlanStepScopeSchema.optional(),
 });
 
-const clickStepWithScopeSchema = clickStepSchema.extend({
-  scope: testPlanStepScopeSchema.optional(),
-});
-
-const fillStepWithScopeSchema = fillStepSchema.extend({
-  scope: testPlanStepScopeSchema.optional(),
-});
-
-const assertVisibleStepWithScopeSchema = assertVisibleStepSchema.extend({
-  scope: testPlanStepScopeSchema.optional(),
-});
-
-const assertTextStepWithScopeSchema = assertTextStepSchema.extend({
-  scope: testPlanStepScopeSchema.optional(),
-});
-
-const assertUrlStepWithScopeSchema = assertUrlStepSchema.extend({
-  scope: testPlanStepScopeSchema.optional(),
-});
-
-// 4. Combine Supported Actions
+// 3. Combine Supported Actions
 const testPlanStepSchema = z.discriminatedUnion("action", [
-  navigateStepWithScopeSchema,
-  clickStepWithScopeSchema,
-  fillStepWithScopeSchema,
-  assertVisibleStepWithScopeSchema,
-  assertTextStepWithScopeSchema,
-  assertUrlStepWithScopeSchema,
+  navigateStepSchema,
+  clickStepSchema,
+  fillStepSchema,
+  assertVisibleStepSchema,
+  assertTextStepSchema,
+  assertUrlStepSchema,
 ]);
 
 const testPlanStepWithIdSchema = z.discriminatedUnion("action", [
-  navigateStepWithScopeSchema.extend({ id: z.string() }),
-  clickStepWithScopeSchema.extend({ id: z.string() }),
-  fillStepWithScopeSchema.extend({ id: z.string() }),
-  assertVisibleStepWithScopeSchema.extend({ id: z.string() }),
-  assertTextStepWithScopeSchema.extend({ id: z.string() }),
-  assertUrlStepWithScopeSchema.extend({ id: z.string() }),
+  navigateStepSchema.extend({ id: z.string() }),
+  clickStepSchema.extend({ id: z.string() }),
+  fillStepSchema.extend({ id: z.string() }),
+  assertVisibleStepSchema.extend({ id: z.string() }),
+  assertTextStepSchema.extend({ id: z.string() }),
+  assertUrlStepSchema.extend({ id: z.string() }),
 ]);
 
-// 5. TestPlan Schemas
+// 4. TestPlan Schemas
 export const testPlanOutputSchema = z.strictObject({
   name: z.string(),
   description: z.string(),

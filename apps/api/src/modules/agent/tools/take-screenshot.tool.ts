@@ -1,7 +1,6 @@
-import { mkdir } from "node:fs/promises";
-import path from "node:path";
 import { z } from "zod";
 import type { Tool } from "../types/tool.types.js";
+import { saveScreenshot } from "../../../utils/screenshots.js";
 
 const takeScreenshotParameters = z.strictObject({});
 
@@ -45,16 +44,7 @@ export const takeScreenshotTool: Tool<
       };
     }
 
-    const screenshotDirectory = path.join("screenshots", runId);
-
-    const screenshotPath = path.join(screenshotDirectory, `${scenarioId}.png`);
-
-    await mkdir(screenshotDirectory, { recursive: true });
-
-    await page.screenshot({
-      path: screenshotPath,
-      fullPage: true,
-    });
+    const screenshotPath = await saveScreenshot(page, runId, scenarioId);
 
     return {
       success: true,

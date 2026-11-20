@@ -3,10 +3,7 @@ import type {
   AgentClientInput,
   AgentClientResponse,
 } from "./agent-client.js";
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
+import { isRecord } from "../utils/is-record.js";
 
 function parseToolResult(content: string): unknown {
   try {

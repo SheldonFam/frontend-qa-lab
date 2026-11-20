@@ -3,6 +3,7 @@ import { stat } from "node:fs/promises";
 import path from "node:path";
 
 import { getRun } from "../services/run.service.js";
+import { SCREENSHOT_DIRECTORY } from "../../../utils/screenshots.js";
 
 export const getScenarioScreenshotController: RequestHandler<{
   id: string;
@@ -52,7 +53,7 @@ export const getScenarioScreenshotController: RequestHandler<{
     }
 
     // 4. Resolve and validate the screenshot path
-    const screenshotRoot = path.resolve(process.cwd(), "screenshots");
+    const screenshotRoot = path.resolve(process.cwd(), SCREENSHOT_DIRECTORY);
     const screenshotPath = path.resolve(scenarioResult.screenshotPath);
     const relativePath = path.relative(screenshotRoot, screenshotPath);
 
