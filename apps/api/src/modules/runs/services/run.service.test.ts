@@ -86,7 +86,7 @@ describe("executeRun", () => {
     expect(updatedRun?.status).toBe("completed");
 
     expect(updatedRun?.testPlan).not.toBeNull();
-    expect(updatedRun?.testPlan?.name).toBe("Login Functionality Test");
+    expect(updatedRun?.testPlan?.name).toBe("Sample plan (mock planner)");
 
     expect(updatedRun?.results).toEqual([result]);
     expect(updatedRun?.scenarios[0]?.status).toBe("passed");
