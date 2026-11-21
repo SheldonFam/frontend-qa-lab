@@ -42,6 +42,14 @@ export interface ApiInputDiagnostic {
   disabled: boolean;
 }
 
+export interface ApiAgentStep {
+  tool: string;
+  arguments: unknown;
+  success: boolean;
+  passed: boolean | null;
+  error: string | null;
+}
+
 export interface ApiFailureAnalysis {
   analysis: string;
   suggestedAction: string;
@@ -63,6 +71,8 @@ export interface ApiScenarioResult {
 
   error: string | null;
   assertions: ApiAssertionResult[];
+  agentSteps: ApiAgentStep[];
+  agentSummary: string | null;
   failureAnalysis: ApiFailureAnalysis | null;
   screenshotPath: string | null;
 }

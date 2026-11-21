@@ -1,10 +1,10 @@
-function toLabel(key: string): string {
+export function toLabel(key: string): string {
   const words = key.replace(/([A-Z])/g, " $1").toLowerCase();
 
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
-function toText(value: unknown): string {
+export function toText(value: unknown): string {
   if (typeof value === "string") {
     return value;
   }

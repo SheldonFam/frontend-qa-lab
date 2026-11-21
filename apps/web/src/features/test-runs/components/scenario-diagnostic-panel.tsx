@@ -4,6 +4,7 @@ import type { ApiScenarioResult } from "../../../types/api";
 
 import { getAssertionDetails } from "../utils/get-assertion-details";
 
+import { AgentSteps } from "./agent-steps";
 import { ScenarioScreenshot } from "./scenario-screenshot";
 
 interface DiagnosticListProps {
@@ -81,6 +82,8 @@ export function ScenarioDiagnosticPanel({
           </Stack>
         </Paper>
       )}
+
+      <AgentSteps steps={result.agentSteps} summary={result.agentSummary} />
 
       <Stack gap="xs">
         <Text fw={600} size="sm">
