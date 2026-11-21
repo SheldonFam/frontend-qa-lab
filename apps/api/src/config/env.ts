@@ -8,6 +8,7 @@ const envSchema = z
     PLANNER_CLIENT: z.enum(["mock", "openai"]).default("mock"),
     OPENAI_MODEL: z.string().min(1).default("gpt-6-astra"),
     OPENAI_API_KEY: z.string().optional(),
+    DATABASE_FILE: z.string().min(1).default("data/qa-lab.db"),
   })
   .refine(
     (value) =>

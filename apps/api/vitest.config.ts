@@ -5,6 +5,7 @@ export default defineConfig({
     exclude: [...configDefaults.exclude, "**/dist/**"],
     env: {
       PLANNER_CLIENT: "mock",
+      DATABASE_FILE: ":memory:",
     },
   },
 });
