@@ -43,7 +43,19 @@ describe("Runs API Integration", () => {
       createdAt: new Date().toISOString(),
       startedAt: new Date().toISOString(),
       completedAt: new Date().toISOString(),
-      scenarios: [],
+      scenarios: [
+        {
+          id: "scenario-1",
+          language: "en",
+          route: "/",
+          viewport: {
+            name: "desktop",
+            width: 1280,
+            height: 720,
+          },
+          status: "pending",
+        },
+      ],
       results: [],
       requirements: "Test screenshot API",
       testPlan: null,
@@ -342,11 +354,11 @@ describe("Runs API Integration", () => {
     await writeFile(screenshotPath, screenshotBuffer);
 
     try {
-      const testRun = createTestRun(runId);
-
-      testRun.results.push(createScreenshotResult(scenarioId, screenshotPath));
-
-      runRepository.create(testRun);
+      runRepository.create(createTestRun(runId));
+      runRepository.addScenarioResult(
+        runId,
+        createScreenshotResult(scenarioId, screenshotPath),
+      );
 
       const response = await fetch(
         `${baseUrl}/runs/${runId}/scenarios/${scenarioId}/screenshot`,
@@ -395,11 +407,11 @@ describe("Runs API Integration", () => {
     const runId = `screenshot-test-${Date.now()}`;
     const scenarioId = "scenario-1";
 
-    const testRun = createTestRun(runId);
-
-    testRun.results.push(createScreenshotResult(scenarioId, null));
-
-    runRepository.create(testRun);
+    runRepository.create(createTestRun(runId));
+    runRepository.addScenarioResult(
+      runId,
+      createScreenshotResult(scenarioId, null),
+    );
 
     const response = await fetch(
       `${baseUrl}/runs/${runId}/scenarios/${scenarioId}/screenshot`,
