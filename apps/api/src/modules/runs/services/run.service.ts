@@ -19,6 +19,8 @@ import { runAgentScenario } from "../../agent/runtime/agent-scenario-runner.js";
 import { analyzeFailure } from "../../analysis/failure-analysis.service.js";
 import { getErrorSummary } from "../../../utils/get-error-summary.js";
 
+const RESTART_ERROR_MESSAGE = "The API restarted before this run finished.";
+
 // Create a new Run
 export function createRun(input: CreateRunInput): TestRun {
   const { configuration, requirements } = input;
@@ -107,29 +109,11 @@ export async function executeRun(
         });
       }
 
-      // Step 5: Save scenario result
+      // Step 5: Save scenario result and status
       runRepository.addScenarioResult(runId, result);
-
-      // Step 6: Update scenario status
-      // Read the latest Run to avoid overwriting previous scenario updates.
-      const currentRun = runRepository.findById(runId);
-
-      if (!currentRun) {
-        throw new Error("Run not found while updating scenario status");
-      }
-
-      const updatedScenarios = currentRun.scenarios.map((item) =>
-        item.id === result.scenarioId
-          ? { ...item, status: result.status }
-          : item,
-      );
-
-      runRepository.update(runId, {
-        scenarios: updatedScenarios,
-      });
     }
 
-    // Step 7: Update Run status
+    // Step 6: Update Run status
     runRepository.update(runId, {
       status: "completed",
       completedAt: new Date().toISOString(),
@@ -143,7 +127,7 @@ export async function executeRun(
 
     throw error;
   } finally {
-    // Step 8: Close Browser
+    // Step 7: Close Browser
     if (browser) {
       await browser.close();
     }
@@ -158,4 +142,8 @@ export function getRun(id: string): TestRun | undefined {
 // Get all Runs
 export function getAllRuns(): TestRun[] {
   return runRepository.findAll();
+}
+
+export function failUnfinishedRuns(): void {
+  runRepository.failUnfinishedRuns(RESTART_ERROR_MESSAGE);
 }

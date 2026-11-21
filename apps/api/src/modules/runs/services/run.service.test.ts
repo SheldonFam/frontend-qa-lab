@@ -11,7 +11,7 @@ import type { TestConfiguration } from "../schemas/test-configuration.schema.js"
 import type { CreateRunInput } from "../schemas/create-run.schema.js";
 import type { ScenarioResult } from "../types/scenario.types.js";
 
-import { createRun, executeRun } from "./run.service.js";
+import { createRun, executeRun, failUnfinishedRuns } from "./run.service.js";
 import { mockLLMClient } from "../../planner/clients/mock-llm.client.js";
 
 // Mock Browser Manager
@@ -460,5 +460,39 @@ describe("executeRun failure reason", () => {
 
     expect(updatedRun?.status).toBe("failed");
     expect(updatedRun?.error).toBe("Planner generation failed");
+  });
+});
+
+describe("failUnfinishedRuns", () => {
+  beforeEach(() => {
+    runRepository.clear();
+  });
+
+  it("should mark a run that never finished as failed", () => {
+    const run = createRun({
+      configuration: {
+        targetUrl: "https://example.com",
+        languages: ["en"],
+        routes: ["/"],
+        viewports: [
+          {
+            name: "desktop",
+            width: 1280,
+            height: 720,
+          },
+        ],
+      },
+      requirements: "Test login functionality",
+    });
+
+    failUnfinishedRuns();
+
+    const updatedRun = runRepository.findById(run.id);
+
+    expect(updatedRun?.status).toBe("failed");
+    expect(updatedRun?.error).toBe(
+      "The API restarted before this run finished.",
+    );
+    expect(updatedRun?.completedAt).not.toBeNull();
   });
 });
