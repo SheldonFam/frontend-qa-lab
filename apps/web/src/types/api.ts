@@ -42,6 +42,11 @@ export interface ApiInputDiagnostic {
   disabled: boolean;
 }
 
+export interface ApiFailureAnalysis {
+  analysis: string;
+  suggestedAction: string;
+}
+
 // Scenario Result
 export interface ApiScenarioResult {
   scenarioId: string;
@@ -58,6 +63,7 @@ export interface ApiScenarioResult {
 
   error: string | null;
   assertions: ApiAssertionResult[];
+  failureAnalysis: ApiFailureAnalysis | null;
   screenshotPath: string | null;
 }
 

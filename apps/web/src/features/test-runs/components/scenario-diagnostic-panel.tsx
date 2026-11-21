@@ -56,6 +56,32 @@ export function ScenarioDiagnosticPanel({
         </Stack>
       )}
 
+      {result.failureAnalysis && (
+        <Paper withBorder radius="sm" p="sm">
+          <Stack gap="xs">
+            <Stack gap={4}>
+              <Text fw={600} size="sm">
+                AI Analysis
+              </Text>
+
+              <Text size="sm">{result.failureAnalysis.analysis}</Text>
+            </Stack>
+
+            <Stack gap={4}>
+              <Text fw={600} size="sm">
+                Suggested Action
+              </Text>
+
+              <Text size="sm">{result.failureAnalysis.suggestedAction}</Text>
+            </Stack>
+
+            <Text size="xs" c="dimmed">
+              Written by AI. The assertions below decide pass or fail.
+            </Text>
+          </Stack>
+        </Paper>
+      )}
+
       <Stack gap="xs">
         <Text fw={600} size="sm">
           Screenshot
