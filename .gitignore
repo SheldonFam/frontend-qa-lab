@@ -33,6 +33,7 @@ Thumbs.db
 playwright-report/
 test-results/
 apps/api/screenshots/
+apps/api/data/
 
 # Temporary files
 *.tmp

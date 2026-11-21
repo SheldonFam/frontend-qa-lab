@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1795251972762,
+      "tag": "0000_create_runs_and_scenarios",
+      "breakpoints": true
+    }
+  ]
+}
