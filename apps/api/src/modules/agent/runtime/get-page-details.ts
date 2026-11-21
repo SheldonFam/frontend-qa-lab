@@ -1,6 +1,8 @@
 import type { ToolResult } from "../types/tool.types.js";
 import { isRecord } from "../utils/is-record.js";
 
+import { MAX_SAVED_ITEMS, shortenText } from "../../../utils/saved-items.js";
+
 import type { ScenarioResult } from "../../runs/types/scenario.types.js";
 
 type PageDetails = {
@@ -29,49 +31,56 @@ export function getPageDetails(inspection: ToolResult<unknown>): PageDetails {
   }
 
   if (typeof data.title === "string") {
-    pageDetails.title = data.title;
+    pageDetails.title = shortenText(data.title);
   }
 
   if (Array.isArray(data.buttons)) {
-    pageDetails.buttons = data.buttons.flatMap((button) => {
-      if (!isRecord(button)) {
-        return [];
-      }
+    pageDetails.buttons = data.buttons
+      .flatMap((button) => {
+        if (!isRecord(button)) {
+          return [];
+        }
 
-      if (
-        typeof button.text !== "string" ||
-        typeof button.disabled !== "boolean"
-      ) {
-        return [];
-      }
+        if (
+          typeof button.text !== "string" ||
+          typeof button.disabled !== "boolean"
+        ) {
+          return [];
+        }
 
-      return [
-        {
-          text: button.text,
-          disabled: button.disabled,
-        },
-      ];
-    });
+        return [
+          {
+            text: shortenText(button.text),
+            disabled: button.disabled,
+          },
+        ];
+      })
+      .slice(0, MAX_SAVED_ITEMS);
   }
 
   if (Array.isArray(data.formElements)) {
-    pageDetails.inputs = data.formElements.flatMap((element) => {
-      if (!isRecord(element) || element.tagName !== "input") {
-        return [];
-      }
+    pageDetails.inputs = data.formElements
+      .flatMap((element) => {
+        if (!isRecord(element) || element.tagName !== "input") {
+          return [];
+        }
 
-      return [
-        {
-          type: typeof element.type === "string" ? element.type : "text",
-          name: typeof element.name === "string" ? element.name : null,
-          placeholder:
-            typeof element.placeholder === "string"
-              ? element.placeholder
-              : null,
-          disabled: element.disabled === true,
-        },
-      ];
-    });
+        return [
+          {
+            type: typeof element.type === "string" ? element.type : "text",
+            name:
+              typeof element.name === "string"
+                ? shortenText(element.name)
+                : null,
+            placeholder:
+              typeof element.placeholder === "string"
+                ? shortenText(element.placeholder)
+                : null,
+            disabled: element.disabled === true,
+          },
+        ];
+      })
+      .slice(0, MAX_SAVED_ITEMS);
   }
 
   return pageDetails;

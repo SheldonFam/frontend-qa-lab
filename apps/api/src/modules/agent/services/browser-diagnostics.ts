@@ -1,6 +1,8 @@
 import type { Page } from "playwright";
 import type { BrowserDiagnostics } from "../types/tool.types.js";
 
+import { addSavedItem, shortenText } from "../../../utils/saved-items.js";
+
 export function createBrowserDiagnostics(): BrowserDiagnostics {
   return {
     consoleErrors: [],
@@ -15,19 +17,20 @@ export function attachBrowserDiagnostics(
 ): void {
   page.on("console", (message) => {
     if (message.type() === "error") {
-      diagnostics.consoleErrors.push(message.text());
+      addSavedItem(diagnostics.consoleErrors, shortenText(message.text()));
     }
   });
 
   page.on("pageerror", (error) => {
-    diagnostics.pageErrors.push(error.message);
+    addSavedItem(diagnostics.pageErrors, shortenText(error.message));
   });
 
   page.on("requestfailed", (request) => {
     const failure = request.failure();
 
-    diagnostics.failedRequests.push(
-      `${request.method()} ${request.url()} - ${failure?.errorText ?? "Unknown error"}`,
+    addSavedItem(
+      diagnostics.failedRequests,
+      `${request.method()} ${shortenText(request.url())} - ${failure?.errorText ?? "Unknown error"}`,
     );
   });
 }
