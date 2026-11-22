@@ -21,6 +21,11 @@ import { getErrorSummary } from "../../../utils/get-error-summary.js";
 
 const RESTART_ERROR_MESSAGE = "The API restarted before this run finished.";
 
+type ExecuteRunOptions = {
+  agentClient?: AgentClient;
+  signal?: AbortSignal;
+};
+
 // Create a new Run
 export function createRun(input: CreateRunInput): TestRun {
   const { configuration, requirements } = input;
@@ -48,9 +53,10 @@ export function createRun(input: CreateRunInput): TestRun {
 export async function executeRun(
   runId: string,
   input: CreateRunInput,
-  agentClient?: AgentClient,
+  options: ExecuteRunOptions = {},
 ): Promise<void> {
   const { configuration, requirements } = input;
+  const { agentClient, signal } = options;
 
   const run = runRepository.findById(runId);
 
@@ -78,6 +84,8 @@ export async function executeRun(
       getPlannerClient(),
     );
 
+    signal?.throwIfAborted();
+
     // Step 2: Save Global Test Plan
     runRepository.update(runId, {
       testPlan,
@@ -86,6 +94,8 @@ export async function executeRun(
 
     // Step 3: Launch Browser
     browser = await launchBrowser();
+
+    signal?.throwIfAborted();
 
     // Step 4: Execute scenarios using Agent
     for (const scenario of run.scenarios) {
@@ -101,12 +111,16 @@ export async function executeRun(
         agentClient,
       );
 
+      signal?.throwIfAborted();
+
       if (result.status === "failed") {
         result.failureAnalysis = await analyzeFailure({
           scenario,
           testPlan: scenarioTestPlan,
           result,
         });
+
+        signal?.throwIfAborted();
       }
 
       // Step 5: Save scenario result and status
@@ -119,6 +133,10 @@ export async function executeRun(
       completedAt: new Date().toISOString(),
     });
   } catch (error: unknown) {
+    if (signal?.aborted) {
+      return;
+    }
+
     runRepository.update(runId, {
       status: "failed",
       completedAt: new Date().toISOString(),
@@ -146,4 +164,19 @@ export function getAllRuns(): TestRun[] {
 
 export function failUnfinishedRuns(): void {
   runRepository.failUnfinishedRuns(RESTART_ERROR_MESSAGE);
+}
+
+export function cancelRun(testRun: TestRun): TestRun {
+  const completedAt = new Date().toISOString();
+
+  runRepository.update(testRun.id, {
+    status: "cancelled",
+    completedAt,
+  });
+
+  return {
+    ...testRun,
+    status: "cancelled",
+    completedAt,
+  };
 }

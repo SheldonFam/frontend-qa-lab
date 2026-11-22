@@ -1,8 +1,14 @@
 import type { RequestHandler } from "express";
 
 import { createRunInputSchema } from "../schemas/create-run.schema.js";
-import { addRunToQueue } from "../services/run-queue.js";
-import { createRun, getAllRuns, getRun } from "../services/run.service.js";
+import { addRunToQueue, stopRun } from "../services/run-queue.js";
+import {
+  cancelRun,
+  createRun,
+  getAllRuns,
+  getRun,
+} from "../services/run.service.js";
+import { isRunFinished } from "../utils/run-status.js";
 
 const MAX_SCENARIOS_PER_RUN = 30;
 
@@ -74,5 +80,41 @@ export const getAllRunsController: RequestHandler = (req, res) => {
   return res.status(200).json({
     success: true,
     data: testRun,
+  });
+};
+
+export const cancelRunController: RequestHandler<{ id: string }> = (
+  req,
+  res,
+) => {
+  const testRun = getRun(req.params.id);
+
+  if (!testRun) {
+    return res.status(404).json({
+      success: false,
+      error: {
+        code: "RUN_NOT_FOUND",
+        message: "Test run not found",
+      },
+    });
+  }
+
+  if (isRunFinished(testRun.status)) {
+    return res.status(409).json({
+      success: false,
+      error: {
+        code: "RUN_ALREADY_FINISHED",
+        message: `This run is already ${testRun.status} and cannot be cancelled`,
+      },
+    });
+  }
+
+  const cancelledRun = cancelRun(testRun);
+
+  stopRun(testRun.id);
+
+  return res.status(200).json({
+    success: true,
+    data: cancelledRun,
   });
 };

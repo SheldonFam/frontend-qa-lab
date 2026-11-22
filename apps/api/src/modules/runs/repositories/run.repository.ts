@@ -3,13 +3,13 @@ import { and, eq, inArray } from "drizzle-orm";
 import { database } from "../../../database/database.js";
 import { runs, scenarios } from "../../../database/schema.js";
 
-import type { RunStatus, TestRun } from "../types/run.types.js";
+import { UNFINISHED_RUN_STATUSES } from "../utils/run-status.js";
+
+import type { TestRun } from "../types/run.types.js";
 import type { ScenarioResult, TestScenario } from "../types/scenario.types.js";
 
 type RunRow = typeof runs.$inferSelect;
 type ScenarioRow = typeof scenarios.$inferSelect;
-
-const UNFINISHED_STATUSES: RunStatus[] = ["queued", "planning", "running"];
 
 function toRunRow(testRun: TestRun): RunRow {
   return {
@@ -162,7 +162,7 @@ export const runRepository = {
         completedAt: new Date().toISOString(),
         error,
       })
-      .where(inArray(runs.status, UNFINISHED_STATUSES))
+      .where(inArray(runs.status, UNFINISHED_RUN_STATUSES))
       .run();
   },
 

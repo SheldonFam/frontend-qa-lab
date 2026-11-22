@@ -183,7 +183,7 @@ describe("Run Agent Integration", () => {
 
     // Step 2: Execute Run
     // Real Browser + Real Agent Runtime + Mock Agent Client
-    await executeRun(run.id, input, mockAgentClient);
+    await executeRun(run.id, input, { agentClient: mockAgentClient });
 
     // Step 3: Retrieve completed Run
     const completedRun = getRun(run.id);
