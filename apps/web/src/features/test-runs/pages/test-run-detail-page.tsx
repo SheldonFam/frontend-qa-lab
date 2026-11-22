@@ -6,6 +6,7 @@ import { Page } from "../../../components/layout/page";
 import { ErrorState } from "../../../components/feedback/error-state";
 import { LoadingState } from "../../../components/feedback/loading-state";
 
+import { CancelRunButton } from "../components/cancel-run-button";
 import { ExecutionSummaryCard } from "../components/execution-summary-card";
 import { RunInformationCard } from "../components/run-information-card";
 import { ScenarioResultsCard } from "../components/scenario-results-card";
@@ -23,6 +24,8 @@ export function TestRunDetailPage() {
       description="Monitor your test execution and view scenario results."
       actions={
         <Group>
+          {run && <CancelRunButton run={run} />}
+
           <Button component={Link} to="/test-runs" variant="default">
             Back to Test Runs
           </Button>

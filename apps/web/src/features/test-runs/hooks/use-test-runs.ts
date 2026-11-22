@@ -1,9 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { ApiError } from "../api/api-error";
-import { createTestRun, getTestRun, getTestRuns } from "../api/test-run-api";
+import {
+  cancelTestRun,
+  createTestRun,
+  getTestRun,
+  getTestRuns,
+} from "../api/test-run-api";
 
-import type { TestRunStatus } from "../types/test-run";
+import { isRunFinished } from "../utils/is-run-finished";
 import { toTestRun } from "../utils/to-test-run";
 
 const TEST_RUNS_KEY = ["test-runs"];
@@ -13,12 +18,6 @@ const LIST_REFRESH_INTERVAL = 3000;
 
 const MAX_RETRIES = 3;
 const NOT_FOUND_STATUS = 404;
-
-function isFinished(status: TestRunStatus): boolean {
-  return (
-    status === "completed" || status === "failed" || status === "cancelled"
-  );
-}
 
 function shouldRetry(failureCount: number, error: Error): boolean {
   if (error instanceof ApiError && error.status === NOT_FOUND_STATUS) {
@@ -38,6 +37,20 @@ export function useCreateTestRun() {
       await queryClient.invalidateQueries({
         queryKey: TEST_RUNS_KEY,
         exact: true,
+      });
+    },
+  });
+}
+
+export function useCancelTestRun() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: cancelTestRun,
+
+    onSettled: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: TEST_RUNS_KEY,
       });
     },
   });
@@ -63,7 +76,7 @@ export function useTestRuns() {
       const testRuns = query.state.data ?? [];
 
       const hasRunInProgress = testRuns.some(
-        (testRun) => !isFinished(testRun.status),
+        (testRun) => !isRunFinished(testRun.status),
       );
 
       return hasRunInProgress ? LIST_REFRESH_INTERVAL : false;
@@ -90,7 +103,7 @@ export function useTestRun(id: string | undefined) {
 
       const status = query.state.data?.status;
 
-      if (status && isFinished(status)) {
+      if (status && isRunFinished(status)) {
         return false;
       }
 
