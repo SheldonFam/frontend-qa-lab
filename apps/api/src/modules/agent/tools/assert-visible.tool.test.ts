@@ -105,25 +105,99 @@ describe("assertVisibleTool", () => {
     });
   });
 
-  it("should return AMBIGUOUS_ELEMENT when multiple elements match", async () => {
+  it("should pass when several elements share the name", async () => {
     await page.setContent(`
       <html>
         <body>
-          <h1>Dashboard</h1>
-          <h1>Dashboard</h1>
+          <header><a href="/about">About Us</a></header>
+          <footer><a href="/about">About Us</a></footer>
         </body>
       </html>
     `);
 
     const result = await assertVisibleTool.execute(
-      { role: "heading", name: "Dashboard" },
+      { role: "link", name: "About Us" },
       { page },
     );
 
-    expect(result.success).toBe(false);
+    expect(result).toEqual({
+      success: true,
+      data: {
+        role: "link",
+        name: "About Us",
+        passed: true,
+        reason: "VISIBLE",
+      },
+      error: null,
+    });
+  });
 
-    if (!result.success) {
-      expect(result.error.code).toBe("AMBIGUOUS_ELEMENT");
+  it("should pass when one of the matching elements is visible", async () => {
+    await page.setContent(`
+      <html>
+        <body>
+          <a href="/about" style="display: none">About Us</a>
+          <a href="/about">About Us</a>
+        </body>
+      </html>
+    `);
+
+    const result = await assertVisibleTool.execute(
+      { role: "link", name: "About Us" },
+      { page },
+    );
+
+    expect(result.success).toBe(true);
+
+    if (result.success) {
+      expect(result.data.passed).toBe(true);
     }
+  });
+
+  it("should ignore capital letters in the name", async () => {
+    await page.setContent(`
+      <html>
+        <body>
+          <a href="#" style="text-transform: uppercase">Personal &amp; Business</a>
+        </body>
+      </html>
+    `);
+
+    const result = await assertVisibleTool.execute(
+      { role: "link", name: "PERSONAL & BUSINESS" },
+      { page },
+    );
+
+    expect(result.success).toBe(true);
+
+    if (result.success) {
+      expect(result.data.passed).toBe(true);
+    }
+  });
+
+  it("should not find an element whose name only contains the text", async () => {
+    await page.setContent(`
+      <html>
+        <body>
+          <a href="#">Personal &amp; Business</a>
+        </body>
+      </html>
+    `);
+
+    const result = await assertVisibleTool.execute(
+      { role: "link", name: "Personal" },
+      { page },
+    );
+
+    expect(result).toEqual({
+      success: true,
+      data: {
+        role: "link",
+        name: "Personal",
+        passed: false,
+        reason: "ELEMENT_NOT_FOUND",
+      },
+      error: null,
+    });
   });
 });

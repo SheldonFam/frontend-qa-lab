@@ -2,26 +2,13 @@ import { z } from "zod";
 import type { Tool } from "../types/tool.types.js";
 
 const assertTextParameters = z.strictObject({
-  role: z.enum([
-    "button",
-    "link",
-    "heading",
-    "textbox",
-    "checkbox",
-    "radio",
-    "combobox",
-    "img",
-    "alert",
-  ]),
-  expectedText: z.string(),
+  text: z.string().trim().min(1),
 });
 
 type AssertTextResult = {
-  role: string;
-  expectedText: string;
-  actualText: string;
+  text: string;
   passed: boolean;
-  reason: "TEXT_MATCHED" | "TEXT_MISMATCH";
+  reason: "TEXT_FOUND" | "TEXT_NOT_FOUND";
 };
 
 export const assertTextTool: Tool<
@@ -30,52 +17,23 @@ export const assertTextTool: Tool<
 > = {
   name: "assert_text",
   description:
-    "Check whether the text of a webpage element exactly matches the expected text.",
+    "Check whether the webpage shows the given text anywhere on the page. Capital letters do not matter, and the text may be part of a longer sentence. Text typed into an input is not checked.",
   parameters: assertTextParameters,
 
-  execute: async ({ role, expectedText }, { page }) => {
-    const element = page.getByRole(role, {
-      includeHidden: true,
-    });
+  execute: async ({ text }, { page }) => {
+    const visibleCount = await page
+      .getByText(text)
+      .filter({ visible: true })
+      .count();
 
-    const count = await element.count();
-
-    if (count === 0) {
-      return {
-        success: true,
-        data: {
-          role,
-          expectedText,
-          actualText: "",
-          passed: false,
-          reason: "TEXT_MISMATCH",
-        },
-        error: null,
-      };
-    }
-
-    if (count > 1) {
-      return {
-        success: false,
-        data: null,
-        error: {
-          code: "AMBIGUOUS_ELEMENT",
-          message: `Multiple elements with role "${role}" were found`,
-        },
-      };
-    }
-
-    const actualText = (await element.textContent())?.trim() ?? "";
-    const passed = actualText === expectedText;
+    const passed = visibleCount > 0;
 
     return {
       success: true,
       data: {
-        role,
-        expectedText,
-        actualText,
+        text,
         passed,
-        reason: passed ? "TEXT_MATCHED" : "TEXT_MISMATCH",
+        reason: passed ? "TEXT_FOUND" : "TEXT_NOT_FOUND",
       },
       error: null,
     };

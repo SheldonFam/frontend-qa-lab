@@ -1,9 +1,13 @@
 import { z } from "zod";
 import type { Tool } from "../types/tool.types.js";
+import { createNameMatcher } from "../utils/create-name-matcher.js";
+
+const CLICK_TIMEOUT_MS = 5000;
 
 const clickElementParameters = z.strictObject({
   role: z.enum(["button", "link"]),
   name: z.string().trim().min(1),
+  occurrence: z.number().int().positive().optional(),
 });
 
 type ClickElementResult = {
@@ -18,19 +22,16 @@ export const clickElementTool: Tool<
 > = {
   name: "click_element",
   description:
-    "Click a webpage button or link using its accessible role and name.",
+    'Click a webpage button or link using its accessible role and name. Capital letters in the name do not matter. If several visible elements share the name, set "occurrence" to choose one: 1 is the first from the top of the page.',
   parameters: clickElementParameters,
 
-  execute: async ({ role, name }, { page }) => {
-    const element = page.getByRole(role, {
-      name,
-      exact: true,
+  execute: async ({ role, name, occurrence }, { page }) => {
+    const matches = page.getByRole(role, {
+      name: createNameMatcher(name),
       includeHidden: true,
     });
 
-    const count = await element.count();
-
-    if (count === 0) {
+    if ((await matches.count()) === 0) {
       return {
         success: false,
         data: null,
@@ -41,18 +42,10 @@ export const clickElementTool: Tool<
       };
     }
 
-    if (count > 1) {
-      return {
-        success: false,
-        data: null,
-        error: {
-          code: "AMBIGUOUS_ELEMENT",
-          message: `Multiple ${role} elements named "${name}" were found`,
-        },
-      };
-    }
+    const visibleMatches = matches.filter({ visible: true });
+    const visibleCount = await visibleMatches.count();
 
-    if (!(await element.isVisible())) {
+    if (visibleCount === 0) {
       return {
         success: false,
         data: null,
@@ -62,6 +55,30 @@ export const clickElementTool: Tool<
         },
       };
     }
+
+    if (visibleCount > 1 && occurrence === undefined) {
+      return {
+        success: false,
+        data: null,
+        error: {
+          code: "AMBIGUOUS_ELEMENT",
+          message: `${visibleCount} visible ${role} elements named "${name}" were found. Set "occurrence" from 1 to ${visibleCount} to choose one`,
+        },
+      };
+    }
+
+    if (occurrence !== undefined && occurrence > visibleCount) {
+      return {
+        success: false,
+        data: null,
+        error: {
+          code: "OCCURRENCE_NOT_FOUND",
+          message: `Only ${visibleCount} visible ${role} elements named "${name}" were found`,
+        },
+      };
+    }
+
+    const element = visibleMatches.nth((occurrence ?? 1) - 1);
 
     if (!(await element.isEnabled())) {
       return {
@@ -74,7 +91,18 @@ export const clickElementTool: Tool<
       };
     }
 
-    await element.click();
+    try {
+      await element.click({ timeout: CLICK_TIMEOUT_MS });
+    } catch {
+      return {
+        success: false,
+        data: null,
+        error: {
+          code: "CLICK_FAILED",
+          message: `${role} "${name}" could not be clicked. Another element may be covering it`,
+        },
+      };
+    }
 
     return {
       success: true,
