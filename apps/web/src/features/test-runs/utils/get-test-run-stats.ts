@@ -9,6 +9,7 @@ export function getTestRunStats(testRuns: TestRun[]) {
     totalRuns: testRuns.length,
     completedRuns: countByStatus("completed"),
     failedRuns: countByStatus("failed"),
+    cancelledRuns: countByStatus("cancelled"),
     inProgressRuns:
       countByStatus("queued") +
       countByStatus("planning") +
