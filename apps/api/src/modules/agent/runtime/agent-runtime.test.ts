@@ -19,6 +19,27 @@ describe("Agent Runtime", () => {
     await browser.close();
   });
 
+  it("should open pages in the given language", async () => {
+    for (const language of ["en", "ms", "zh"]) {
+      const runtime = await createAgentRuntime(browser, {
+        runId: "run-language",
+        scenarioId: `scenario-${language}`,
+        viewport: {
+          width: 1280,
+          height: 720,
+        },
+        language,
+        allowedTools: ["inspect_page"],
+      });
+
+      const browserLanguage = await runtime.page.evaluate("navigator.language");
+
+      await runtime.close();
+
+      expect(browserLanguage).toBe(language);
+    }
+  });
+
   it("should create a browser page and diagnostics", async () => {
     const runtime = await createAgentRuntime(browser, {
       runId: "run-1",
@@ -27,6 +48,7 @@ describe("Agent Runtime", () => {
         width: 1280,
         height: 720,
       },
+      language: "en",
       allowedTools: ["inspect_page"],
     });
 
@@ -49,6 +71,7 @@ describe("Agent Runtime", () => {
         width: 1280,
         height: 720,
       },
+      language: "en",
       allowedTools: ["inspect_page"],
     });
 
@@ -78,6 +101,7 @@ describe("Agent Runtime", () => {
         width: 1280,
         height: 720,
       },
+      language: "en",
       allowedTools: ["inspect_page"],
     });
 
@@ -106,6 +130,7 @@ describe("Agent Runtime", () => {
         width: 1280,
         height: 720,
       },
+      language: "en",
       allowedTools: ["get_console_errors"],
     });
 
@@ -138,6 +163,7 @@ describe("Agent Runtime", () => {
         width: 1280,
         height: 720,
       },
+      language: "en",
       allowedTools: ["inspect_page", "assert_visible"],
     });
 
@@ -193,6 +219,7 @@ describe("Agent Runtime", () => {
         width: 1280,
         height: 720,
       },
+      language: "en",
       allowedTools: ["inspect_page"],
     });
 
@@ -235,6 +262,7 @@ describe("Agent Runtime", () => {
         width: 1280,
         height: 720,
       },
+      language: "en",
       allowedTools: ["inspect_page", "assert_visible"],
     });
 

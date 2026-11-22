@@ -15,6 +15,7 @@ import { runRepository } from "../src/modules/runs/repositories/run.repository.j
 // Local test website
 let fixtureServer: Server;
 let targetUrl: string;
+let requestedLanguages: string[] = [];
 
 // Mock Agent Client
 const mockAgentClient: AgentClient = {
@@ -109,7 +110,9 @@ const mockAgentClient: AgentClient = {
 describe("Run Agent Integration", () => {
   beforeAll(async () => {
     // Start a local fixture website
-    fixtureServer = createServer((_request, response) => {
+    fixtureServer = createServer((request, response) => {
+      requestedLanguages.push(request.headers["accept-language"] ?? "");
+
       response.writeHead(200, {
         "Content-Type": "text/html",
       });
@@ -156,6 +159,7 @@ describe("Run Agent Integration", () => {
 
   beforeEach(() => {
     runRepository.clear();
+    requestedLanguages = [];
   });
 
   it("should execute a complete Run using a real Playwright browser and Mock Agent", async () => {
@@ -228,4 +232,35 @@ describe("Run Agent Integration", () => {
     // Step 8: Verify Scenario status
     expect(completedRun.scenarios[0].status).toBe("passed");
   }, 30_000);
+
+  it("should ask the website for the language of each scenario", async () => {
+    const input = {
+      configuration: {
+        targetUrl,
+        languages: ["en", "ms"],
+        routes: ["/"],
+        viewports: [
+          {
+            name: "desktop",
+            width: 1280,
+            height: 720,
+          },
+        ],
+      },
+      requirements: "Verify that the Learn more link is visible.",
+    };
+
+    const run = createRun(input);
+
+    await executeRun(run.id, input, { agentClient: mockAgentClient });
+
+    expect(getRun(run.id)?.status).toBe("completed");
+
+    const firstLanguages = requestedLanguages.map(
+      (acceptLanguage) => acceptLanguage.split(",")[0],
+    );
+
+    expect(firstLanguages).toContain("en");
+    expect(firstLanguages).toContain("ms");
+  }, 60_000);
 });

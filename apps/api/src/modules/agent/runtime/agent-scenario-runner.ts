@@ -94,6 +94,7 @@ export async function runAgentScenario(
       runId,
       scenarioId: scenario.id,
       viewport: scenario.viewport,
+      language: scenario.language,
       allowedTools,
     });
 

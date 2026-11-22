@@ -31,6 +31,7 @@ type AgentRuntimeOptions = {
   runId: string;
   scenarioId: string;
   viewport: ViewportSize;
+  language: string;
   allowedTools: string[];
 };
 
@@ -63,7 +64,11 @@ export async function createAgentRuntime(
 ): Promise<AgentRuntimeSession> {
   registerAgentTools();
 
-  const context = await createBrowserContext(browser, options.viewport);
+  const context = await createBrowserContext(
+    browser,
+    options.viewport,
+    options.language,
+  );
 
   try {
     const page = await createPage(context);
