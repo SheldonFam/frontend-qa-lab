@@ -60,6 +60,12 @@ export function getTestRun(runId: string): Promise<ApiTestRun> {
   return request<ApiTestRun>(`/runs/${encodeURIComponent(runId)}`);
 }
 
+export function cancelTestRun(runId: string): Promise<ApiTestRun> {
+  return request<ApiTestRun>(`/runs/${encodeURIComponent(runId)}/cancel`, {
+    method: "POST",
+  });
+}
+
 export function getScenarioScreenshotUrl(
   runId: string,
   scenarioId: string,
