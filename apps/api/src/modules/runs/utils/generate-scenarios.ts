@@ -4,6 +4,8 @@ import type {
 } from "../schemas/test-configuration.schema.js";
 import type { TestScenario } from "../types/scenario.types.js";
 
+import { fillRouteLanguage } from "./fill-route-language.js";
+
 function createScenario(
   language: string,
   route: string,
@@ -26,7 +28,13 @@ export function generateScenarios(
   for (const language of configuration.languages) {
     for (const route of configuration.routes) {
       for (const viewport of configuration.viewports) {
-        scenarios.push(createScenario(language, route, viewport));
+        scenarios.push(
+          createScenario(
+            language,
+            fillRouteLanguage(route, language),
+            viewport,
+          ),
+        );
       }
     }
   }

@@ -162,6 +162,85 @@ describe("Runs API Integration", () => {
     expect(runRepository.findAll()).toHaveLength(0);
   });
 
+  it("should fill the language marker of a route for each scenario", async () => {
+    const browser = {
+      close: vi.fn().mockResolvedValue(undefined),
+    } as unknown as Browser;
+
+    vi.mocked(launchBrowser).mockResolvedValue(browser);
+    vi.mocked(runAgentScenario).mockImplementation(
+      async (_browser, _config, scenario) =>
+        createScreenshotResult(scenario.id, null),
+    );
+
+    const response = await fetch(`${baseUrl}/runs`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        configuration: {
+          targetUrl: "https://example.com",
+          languages: ["en", "ms"],
+          routes: ["/?lang={language}"],
+          viewports: [
+            {
+              name: "desktop",
+              width: 1280,
+              height: 720,
+            },
+          ],
+        },
+        requirements: "Test the home page in both languages",
+      }),
+    });
+
+    const body = await response.json();
+
+    expect(response.status).toBe(202);
+
+    const languagesAndRoutes = body.data.scenarios.map(
+      (scenario: { language: string; route: string }) =>
+        `${scenario.language} ${scenario.route}`,
+    );
+
+    expect(languagesAndRoutes).toEqual(["en /?lang=en", "ms /?lang=ms"]);
+
+    await vi.waitFor(() => {
+      expect(runRepository.findById(body.data.id)?.status).toBe("completed");
+    });
+  });
+
+  it("should return 400 when a route leaves the target website after the language is filled in", async () => {
+    const response = await fetch(`${baseUrl}/runs`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        configuration: {
+          targetUrl: "https://example.com",
+          languages: ["/other-site.test"],
+          routes: ["/{language}/login"],
+          viewports: [
+            {
+              name: "desktop",
+              width: 1280,
+              height: 720,
+            },
+          ],
+        },
+        requirements: "Test login functionality",
+      }),
+    });
+
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("VALIDATION_ERROR");
+    expect(runRepository.findAll()).toHaveLength(0);
+  });
+
   it("should create a run and execute it in the background", async () => {
     const configuration = {
       targetUrl: "https://example.com",

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { fillRouteLanguage } from "../utils/fill-route-language.js";
+
 const viewportSchema = z.object({
   name: z.string(),
   width: z.number().int().positive(),
@@ -27,7 +29,12 @@ export const testConfigurationSchema = z
   .refine(
     (configuration) =>
       configuration.routes.every((route) =>
-        isOnTargetWebsite(configuration.targetUrl, route),
+        configuration.languages.every((language) =>
+          isOnTargetWebsite(
+            configuration.targetUrl,
+            fillRouteLanguage(route, language),
+          ),
+        ),
       ),
     {
       message: "Routes must stay on the target website",

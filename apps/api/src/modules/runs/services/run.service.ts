@@ -11,6 +11,7 @@ import { mapTestPlanToScenario } from "../../planner/service/test-plan-mapper.js
 
 import { runRepository } from "../repositories/run.repository.js";
 import { generateScenarios } from "../utils/generate-scenarios.js";
+import { getScenarioRoutes } from "../utils/get-scenario-routes.js";
 
 import type { TestRun } from "../types/run.types.js";
 import type { CreateRunInput } from "../schemas/create-run.schema.js";
@@ -77,7 +78,7 @@ export async function executeRun(
       {
         targetUrl: configuration.targetUrl,
         languages: configuration.languages,
-        routes: configuration.routes,
+        routes: getScenarioRoutes(run.scenarios),
         viewports: configuration.viewports,
         requirements,
       },

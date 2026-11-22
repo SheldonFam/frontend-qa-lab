@@ -151,4 +151,30 @@ describe("testConfigurationSchema safety rules", () => {
       expect(result.success).toBe(false);
     }
   });
+
+  it("should accept routes with a language marker", () => {
+    const result = testConfigurationSchema.safeParse(
+      createConfiguration({
+        languages: ["en", "ms"],
+        routes: ["/{language}/login", "/login?lang={language}"],
+      }),
+    );
+
+    expect(result.success).toBe(true);
+  });
+
+  it("should reject a route that leaves the target website after the language is filled in", () => {
+    const languages = ["", "/other-site.test", "\\other-site.test"];
+
+    for (const language of languages) {
+      const result = testConfigurationSchema.safeParse(
+        createConfiguration({
+          languages: ["en", language],
+          routes: ["/{language}/login"],
+        }),
+      );
+
+      expect(result.success).toBe(false);
+    }
+  });
 });

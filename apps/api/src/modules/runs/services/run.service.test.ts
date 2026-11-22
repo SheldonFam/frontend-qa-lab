@@ -419,6 +419,105 @@ describe("executeRun", () => {
   });
 });
 
+describe("executeRun with a language marker in the route", () => {
+  beforeEach(() => {
+    runRepository.clear();
+    vi.clearAllMocks();
+    vi.mocked(analyzeFailure).mockResolvedValue(null);
+  });
+
+  it("should plan and run with the real route of each language", async () => {
+    const markerInput: CreateRunInput = {
+      configuration: {
+        targetUrl: "https://example.com",
+        languages: ["en", "ms"],
+        routes: ["/{language}/login"],
+        viewports: [
+          {
+            name: "desktop",
+            width: 1280,
+            height: 720,
+          },
+        ],
+      },
+      requirements: "Test the login page in both languages",
+    };
+
+    const run = createRun(markerInput);
+
+    expect(run.scenarios.map((scenario) => scenario.route)).toEqual([
+      "/en/login",
+      "/ms/login",
+    ]);
+
+    const browser = {
+      close: vi.fn().mockResolvedValue(undefined),
+    } as unknown as Browser;
+
+    const generatePlan = vi
+      .spyOn(mockLLMClient, "generate")
+      .mockResolvedValueOnce({
+        name: "Login plan",
+        description: "Check the login page in each language",
+        steps: [
+          {
+            action: "assert_visible",
+            target: "login-form",
+          },
+          {
+            action: "assert_url",
+            expectedResult: "/ms/login",
+            scope: {
+              routes: ["/ms/login"],
+            },
+          },
+        ],
+      });
+
+    vi.mocked(launchBrowser).mockResolvedValue(browser);
+    vi.mocked(runAgentScenario).mockImplementation(
+      async (_browser, _configuration, scenario) => ({
+        scenarioId: scenario.id,
+        status: "passed",
+        url: `https://example.com${scenario.route}`,
+        title: "Example Domain",
+        consoleErrors: [],
+        pageErrors: [],
+        failedRequests: [],
+        buttons: [],
+        inputs: [],
+        error: null,
+        assertions: [],
+        agentSteps: [],
+        agentSummary: null,
+        failureAnalysis: null,
+        screenshotPath: null,
+      }),
+    );
+
+    await executeRun(run.id, markerInput);
+
+    const plannerPrompt = JSON.stringify(generatePlan.mock.calls[0]);
+
+    expect(plannerPrompt).toContain("/en/login");
+    expect(plannerPrompt).toContain("/ms/login");
+    expect(plannerPrompt).not.toContain("{language}");
+
+    const stepCountByRoute = Object.fromEntries(
+      vi
+        .mocked(runAgentScenario)
+        .mock.calls.map((call) => [call[2].route, call[3].steps.length]),
+    );
+
+    expect(stepCountByRoute).toEqual({
+      "/en/login": 1,
+      "/ms/login": 2,
+    });
+
+    expect(runRepository.findById(run.id)?.status).toBe("completed");
+  });
+});
+
 describe("executeRun failure reason", () => {
   beforeEach(() => {
     runRepository.clear();

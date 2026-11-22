@@ -45,4 +45,26 @@ describe("generateScenarios", () => {
 
     expect(new Set(ids).size).toBe(8);
   });
+
+  it("should put the language of each scenario into a route with a marker", () => {
+    const scenarios = generateScenarios({
+      targetUrl: "https://example.com",
+      languages: ["en", "ms"],
+      routes: ["/{language}/login", "/pricing?lang={language}", "/about"],
+      viewports: [{ name: "Desktop", width: 1440, height: 900 }],
+    });
+
+    const languagesAndRoutes = scenarios.map(
+      (scenario) => `${scenario.language} ${scenario.route}`,
+    );
+
+    expect(languagesAndRoutes).toEqual([
+      "en /en/login",
+      "en /pricing?lang=en",
+      "en /about",
+      "ms /ms/login",
+      "ms /pricing?lang=ms",
+      "ms /about",
+    ]);
+  });
 });
