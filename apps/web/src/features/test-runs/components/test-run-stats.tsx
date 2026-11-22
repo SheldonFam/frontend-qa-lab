@@ -5,6 +5,7 @@ interface TestRunStatsProps {
     totalRuns: number;
     completedRuns: number;
     failedRuns: number;
+    cancelledRuns: number;
     inProgressRuns: number;
   };
 }
@@ -31,6 +32,12 @@ export function TestRunStats({ stats }: TestRunStatsProps) {
       color: "red",
     },
     {
+      value: stats.cancelledRuns,
+      label: "Cancelled",
+      description: "Runs stopped by a user",
+      color: "dimmed",
+    },
+    {
       value: stats.inProgressRuns,
       label: "In Progress",
       description: "Queued, planning or running",
@@ -39,7 +46,11 @@ export function TestRunStats({ stats }: TestRunStatsProps) {
   ];
 
   return (
-    <SimpleGrid cols={{ base: 2, lg: 4 }} spacing="md">
+    <SimpleGrid
+      type="container"
+      cols={{ base: 2, "560px": 3, "900px": 5 }}
+      spacing="md"
+    >
       {items.map((item) => (
         <Card key={item.label} padding="lg" withBorder radius="md">
           <Stack gap="xs">
