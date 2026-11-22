@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Tool } from "../types/tool.types.js";
+import { createNameMatcher } from "../utils/create-name-matcher.js";
 
 const assertVisibleParameters = z.strictObject({
   role: z.enum([
@@ -28,19 +29,16 @@ export const assertVisibleTool: Tool<
 > = {
   name: "assert_visible",
   description:
-    "Check whether a webpage element with the specified role and accessible name is visible.",
+    "Check whether a webpage element with the specified role and accessible name is visible. Capital letters in the name do not matter. It passes when at least one matching element is visible.",
   parameters: assertVisibleParameters,
 
   execute: async ({ role, name }, { page }) => {
-    const element = page.getByRole(role, {
-      name,
-      exact: true,
+    const matches = page.getByRole(role, {
+      name: createNameMatcher(name),
       includeHidden: true,
     });
 
-    const count = await element.count();
-
-    if (count === 0) {
+    if ((await matches.count()) === 0) {
       return {
         success: true,
         data: {
@@ -53,18 +51,8 @@ export const assertVisibleTool: Tool<
       };
     }
 
-    if (count > 1) {
-      return {
-        success: false,
-        data: null,
-        error: {
-          code: "AMBIGUOUS_ELEMENT",
-          message: `Multiple ${role} elements named "${name}" were found`,
-        },
-      };
-    }
-
-    const isVisible = await element.isVisible();
+    const visibleCount = await matches.filter({ visible: true }).count();
+    const isVisible = visibleCount > 0;
 
     return {
       success: true,

@@ -33,112 +33,153 @@ describe("assertTextTool", () => {
     await browser.close();
   });
 
-  it("should pass when the text matches", async () => {
+  it("should pass when the page shows the text", async () => {
     await page.setContent(`
       <html>
         <body>
-          <div role="alert">Invalid password</div>
+          <h1>Dashboard</h1>
         </body>
       </html>
     `);
 
     const result = await assertTextTool.execute(
-      {
-        role: "alert",
-        expectedText: "Invalid password",
-      },
+      { text: "Dashboard" },
       { page },
     );
 
     expect(result).toEqual({
       success: true,
       data: {
-        role: "alert",
-        expectedText: "Invalid password",
-        actualText: "Invalid password",
+        text: "Dashboard",
         passed: true,
-        reason: "TEXT_MATCHED",
+        reason: "TEXT_FOUND",
       },
       error: null,
     });
   });
 
-  it("should fail when the text does not match", async () => {
+  it("should pass when the text is part of a longer sentence", async () => {
     await page.setContent(`
       <html>
         <body>
-          <div role="alert">Invalid password</div>
+          <a href="#">Personal &amp; Business</a>
+          <p>Welcome back, Sheldon. You have 3 new messages.</p>
+        </body>
+      </html>
+    `);
+
+    for (const text of ["Personal", "Business", "3 new messages"]) {
+      const result = await assertTextTool.execute({ text }, { page });
+
+      expect(result.success).toBe(true);
+
+      if (result.success) {
+        expect(result.data.passed).toBe(true);
+      }
+    }
+  });
+
+  it("should ignore capital letters", async () => {
+    await page.setContent(`
+      <html>
+        <body>
+          <a href="#" style="text-transform: uppercase">Personal &amp; Business</a>
         </body>
       </html>
     `);
 
     const result = await assertTextTool.execute(
-      {
-        role: "alert",
-        expectedText: "Login successful",
-      },
+      { text: "PERSONAL & BUSINESS" },
       { page },
     );
 
-    expect(result).toEqual({
-      success: true,
-      data: {
-        role: "alert",
-        expectedText: "Login successful",
-        actualText: "Invalid password",
-        passed: false,
-        reason: "TEXT_MISMATCH",
-      },
-      error: null,
-    });
+    expect(result.success).toBe(true);
+
+    if (result.success) {
+      expect(result.data.passed).toBe(true);
+    }
   });
 
-  it("should return a failed assertion when the element does not exist", async () => {
-    await page.setContent("<html><body></body></html>");
-
-    const result = await assertTextTool.execute(
-      {
-        role: "alert",
-        expectedText: "Invalid password",
-      },
-      { page },
-    );
-
-    expect(result).toEqual({
-      success: true,
-      data: {
-        role: "alert",
-        expectedText: "Invalid password",
-        actualText: "",
-        passed: false,
-        reason: "TEXT_MISMATCH",
-      },
-      error: null,
-    });
-  });
-
-  it("should return AMBIGUOUS_ELEMENT when multiple elements match", async () => {
+  it("should pass when several elements show the text", async () => {
     await page.setContent(`
       <html>
         <body>
-          <div role="alert">Invalid password</div>
-          <div role="alert">Account locked</div>
+          <button>Close</button>
+          <button>Close</button>
+          <a href="#">About Us</a>
+          <a href="#">About Us</a>
+        </body>
+      </html>
+    `);
+
+    const result = await assertTextTool.execute({ text: "Close" }, { page });
+
+    expect(result.success).toBe(true);
+
+    if (result.success) {
+      expect(result.data.passed).toBe(true);
+    }
+  });
+
+  it("should find text on a page that is plain text", async () => {
+    await page.setContent(
+      '<html><body><pre>{\n  "headers": {\n    "Accept-Language": "ms"\n  }\n}</pre></body></html>',
+    );
+
+    const result = await assertTextTool.execute(
+      { text: '"Accept-Language": "ms"' },
+      { page },
+    );
+
+    expect(result.success).toBe(true);
+
+    if (result.success) {
+      expect(result.data.passed).toBe(true);
+    }
+  });
+
+  it("should fail when the page does not show the text", async () => {
+    await page.setContent(`
+      <html>
+        <body>
+          <h1>Dashboard</h1>
+        </body>
+      </html>
+    `);
+
+    const result = await assertTextTool.execute({ text: "Settings" }, { page });
+
+    expect(result).toEqual({
+      success: true,
+      data: {
+        text: "Settings",
+        passed: false,
+        reason: "TEXT_NOT_FOUND",
+      },
+      error: null,
+    });
+  });
+
+  it("should fail when the text is only in a hidden element", async () => {
+    await page.setContent(`
+      <html>
+        <body>
+          <h1>Dashboard</h1>
+          <p style="display: none">Email is required</p>
         </body>
       </html>
     `);
 
     const result = await assertTextTool.execute(
-      {
-        role: "alert",
-        expectedText: "Invalid password",
-      },
+      { text: "Email is required" },
       { page },
     );
 
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
 
-    if (!result.success) {
-      expect(result.error.code).toBe("AMBIGUOUS_ELEMENT");
+    if (result.success) {
+      expect(result.data.passed).toBe(false);
+      expect(result.data.reason).toBe("TEXT_NOT_FOUND");
     }
   });
 });
