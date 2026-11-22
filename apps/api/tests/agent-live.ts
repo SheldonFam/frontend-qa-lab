@@ -85,6 +85,7 @@ async function main() {
         width: 1280,
         height: 720,
       },
+      language: "en",
       allowedTools: ["inspect_page", "assert_visible"],
     });
 

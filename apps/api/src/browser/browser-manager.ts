@@ -17,9 +17,11 @@ export function launchBrowser(): Promise<Browser> {
 export function createBrowserContext(
   browser: Browser,
   viewport: ViewportSize,
+  language: string,
 ): Promise<BrowserContext> {
   return browser.newContext({
     viewport,
+    locale: language,
   });
 }
 

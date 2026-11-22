@@ -126,6 +126,32 @@ describe("runAgentScenario", () => {
     expect(runtime.close).toHaveBeenCalledTimes(1);
   });
 
+  it("should start the browser in the language of the scenario", async () => {
+    const runtime = createRuntime();
+
+    runtime.runAgent.mockRejectedValue(new Error("Stop after the page opens"));
+
+    vi.mocked(createAgentRuntime).mockResolvedValue(
+      runtime as unknown as AgentRuntime,
+    );
+
+    await runAgentScenario(
+      browser,
+      configuration,
+      { ...scenario, language: "ms" },
+      testPlan,
+      "run-1",
+    );
+
+    expect(createAgentRuntime).toHaveBeenCalledWith(
+      browser,
+      expect.objectContaining({
+        language: "ms",
+        viewport: scenario.viewport,
+      }),
+    );
+  });
+
   it("should not take a screenshot when the page could not be opened", async () => {
     const runtime = createRuntime();
 
