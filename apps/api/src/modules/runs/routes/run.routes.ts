@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import {
+  cancelRunController,
   createRunController,
   getAllRunsController,
   getRunController,
@@ -11,6 +12,7 @@ import { getScenarioScreenshotController } from "../controllers/screenshot.contr
 const router = Router();
 
 router.post("/", createRunController);
+router.post("/:id/cancel", cancelRunController);
 
 router.get(
   "/:id/scenarios/:scenarioId/screenshot",

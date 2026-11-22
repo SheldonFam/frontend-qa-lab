@@ -336,6 +336,134 @@ describe("Runs API Integration", () => {
     expect(runAgentScenario).toHaveBeenCalledTimes(2);
   });
 
+  it("should return 404 when cancelling a run that does not exist", async () => {
+    const response = await fetch(`${baseUrl}/runs/non-existent-run/cancel`, {
+      method: "POST",
+    });
+
+    const body = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(body.error.code).toBe("RUN_NOT_FOUND");
+  });
+
+  it("should return 409 when cancelling a run that is already finished", async () => {
+    const runId = `cancel-test-${Date.now()}`;
+
+    runRepository.create(createTestRun(runId));
+
+    const response = await fetch(`${baseUrl}/runs/${runId}/cancel`, {
+      method: "POST",
+    });
+
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body.error.code).toBe("RUN_ALREADY_FINISHED");
+    expect(runRepository.findById(runId)?.status).toBe("completed");
+  });
+
+  it("should cancel a waiting run and a running run", async () => {
+    const input = {
+      configuration: {
+        targetUrl: "https://example.com",
+        languages: ["en"],
+        routes: ["/login", "/dashboard"],
+        viewports: [
+          {
+            name: "desktop",
+            width: 1280,
+            height: 720,
+          },
+        ],
+      },
+      requirements: "Test login and dashboard functionality",
+    };
+
+    const browser = {
+      close: vi.fn().mockResolvedValue(undefined),
+    } as unknown as Browser;
+
+    vi.mocked(launchBrowser).mockResolvedValue(browser);
+
+    let finishFirstScenario: () => void = () => {};
+
+    const firstScenarioIsFinished = new Promise<void>((resolve) => {
+      finishFirstScenario = resolve;
+    });
+
+    vi.mocked(runAgentScenario).mockImplementation(
+      async (_browser, _config, scenario) => {
+        await firstScenarioIsFinished;
+
+        return createScreenshotResult(scenario.id, null);
+      },
+    );
+
+    async function startRun(): Promise<string> {
+      const response = await fetch(`${baseUrl}/runs`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(input),
+      });
+
+      const body = await response.json();
+
+      return body.data.id;
+    }
+
+    async function cancelRun(runId: string): Promise<Response> {
+      return fetch(`${baseUrl}/runs/${runId}/cancel`, {
+        method: "POST",
+      });
+    }
+
+    const runningRunId = await startRun();
+    const waitingRunId = await startRun();
+
+    await vi.waitFor(() => {
+      expect(runRepository.findById(runningRunId)?.status).toBe("running");
+      expect(runAgentScenario).toHaveBeenCalledTimes(1);
+    });
+
+    const waitingResponse = await cancelRun(waitingRunId);
+    const waitingBody = await waitingResponse.json();
+
+    expect(waitingResponse.status).toBe(200);
+    expect(waitingBody.data.status).toBe("cancelled");
+    expect(waitingBody.data.startedAt).toBeNull();
+    expect(waitingBody.data.completedAt).not.toBeNull();
+
+    const runningResponse = await cancelRun(runningRunId);
+    const runningBody = await runningResponse.json();
+
+    expect(runningResponse.status).toBe(200);
+    expect(runningBody.data.status).toBe("cancelled");
+
+    const secondCancelResponse = await cancelRun(runningRunId);
+
+    expect(secondCancelResponse.status).toBe(409);
+
+    finishFirstScenario();
+
+    await vi.waitFor(() => {
+      expect(browser.close).toHaveBeenCalledOnce();
+    });
+
+    const cancelledRunningRun = runRepository.findById(runningRunId);
+    const cancelledWaitingRun = runRepository.findById(waitingRunId);
+
+    expect(cancelledRunningRun?.status).toBe("cancelled");
+    expect(cancelledRunningRun?.results).toEqual([]);
+    expect(cancelledWaitingRun?.status).toBe("cancelled");
+    expect(cancelledWaitingRun?.testPlan).toBeNull();
+
+    expect(runAgentScenario).toHaveBeenCalledTimes(1);
+    expect(launchBrowser).toHaveBeenCalledTimes(1);
+  });
+
   it("should return a screenshot when it exists", async () => {
     const runId = `screenshot-test-${Date.now()}`;
     const scenarioId = "scenario-1";

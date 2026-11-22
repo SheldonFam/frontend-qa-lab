@@ -11,7 +11,12 @@ import type { TestConfiguration } from "../schemas/test-configuration.schema.js"
 import type { CreateRunInput } from "../schemas/create-run.schema.js";
 import type { ScenarioResult } from "../types/scenario.types.js";
 
-import { createRun, executeRun, failUnfinishedRuns } from "./run.service.js";
+import {
+  cancelRun,
+  createRun,
+  executeRun,
+  failUnfinishedRuns,
+} from "./run.service.js";
 import { mockLLMClient } from "../../planner/clients/mock-llm.client.js";
 
 // Mock Browser Manager
@@ -494,5 +499,242 @@ describe("failUnfinishedRuns", () => {
       "The API restarted before this run finished.",
     );
     expect(updatedRun?.completedAt).not.toBeNull();
+  });
+});
+
+describe("cancelRun", () => {
+  beforeEach(() => {
+    runRepository.clear();
+  });
+
+  it("should mark the run as cancelled", () => {
+    const run = createRun({
+      configuration: {
+        targetUrl: "https://example.com",
+        languages: ["en"],
+        routes: ["/"],
+        viewports: [
+          {
+            name: "desktop",
+            width: 1280,
+            height: 720,
+          },
+        ],
+      },
+      requirements: "Test login functionality",
+    });
+
+    const cancelledRun = cancelRun(run);
+
+    expect(cancelledRun.status).toBe("cancelled");
+    expect(cancelledRun.completedAt).not.toBeNull();
+    expect(runRepository.findById(run.id)).toEqual(cancelledRun);
+  });
+});
+
+describe("executeRun when the run is cancelled", () => {
+  beforeEach(() => {
+    runRepository.clear();
+    vi.clearAllMocks();
+    vi.mocked(analyzeFailure).mockResolvedValue(null);
+  });
+
+  const input: CreateRunInput = {
+    configuration: {
+      targetUrl: "https://example.com",
+      languages: ["en"],
+      routes: ["/login", "/dashboard"],
+      viewports: [
+        {
+          name: "desktop",
+          width: 1280,
+          height: 720,
+        },
+      ],
+    },
+    requirements: "Test login and dashboard functionality",
+  };
+
+  function createResult(
+    scenarioId: string,
+    status: ScenarioResult["status"],
+  ): ScenarioResult {
+    return {
+      scenarioId,
+      status,
+      url: "https://example.com/",
+      title: "Example Domain",
+      consoleErrors: [],
+      pageErrors: [],
+      error: status === "failed" ? "Login assertion failed" : null,
+      failedRequests: [],
+      inputs: [],
+      buttons: [],
+      assertions: [],
+      agentSteps: [],
+      agentSummary: null,
+      failureAnalysis: null,
+      screenshotPath: null,
+    };
+  }
+
+  function createBrowser(): Browser {
+    return {
+      close: vi.fn().mockResolvedValue(undefined),
+    } as unknown as Browser;
+  }
+
+  it("should stop before the browser starts when cancelled during planning", async () => {
+    const run = createRun(input);
+    const abortController = new AbortController();
+
+    vi.spyOn(mockLLMClient, "generate").mockImplementationOnce(async () => {
+      cancelRun(run);
+      abortController.abort();
+
+      return {
+        name: "Login plan",
+        description: "Check the login page",
+        steps: [
+          {
+            action: "assert_visible",
+            target: "login-form",
+          },
+        ],
+      };
+    });
+
+    await executeRun(run.id, input, { signal: abortController.signal });
+
+    const updatedRun = runRepository.findById(run.id);
+
+    expect(updatedRun?.status).toBe("cancelled");
+    expect(updatedRun?.testPlan).toBeNull();
+    expect(updatedRun?.error).toBeNull();
+    expect(launchBrowser).not.toHaveBeenCalled();
+    expect(runAgentScenario).not.toHaveBeenCalled();
+  });
+
+  it("should not save the scenario that was running when the run was cancelled", async () => {
+    const run = createRun(input);
+    const browser = createBrowser();
+    const abortController = new AbortController();
+
+    vi.mocked(launchBrowser).mockResolvedValue(browser);
+    vi.mocked(runAgentScenario).mockImplementation(
+      async (_browser, _configuration, scenario) => {
+        cancelRun(run);
+        abortController.abort();
+
+        return createResult(scenario.id, "failed");
+      },
+    );
+
+    await executeRun(run.id, input, { signal: abortController.signal });
+
+    const updatedRun = runRepository.findById(run.id);
+
+    expect(updatedRun?.status).toBe("cancelled");
+    expect(updatedRun?.results).toEqual([]);
+    expect(updatedRun?.scenarios.map((scenario) => scenario.status)).toEqual([
+      "pending",
+      "pending",
+    ]);
+    expect(runAgentScenario).toHaveBeenCalledOnce();
+    expect(analyzeFailure).not.toHaveBeenCalled();
+    expect(browser.close).toHaveBeenCalledOnce();
+  });
+
+  it("should keep the results that were saved before the cancel", async () => {
+    const run = createRun(input);
+    const browser = createBrowser();
+    const abortController = new AbortController();
+
+    vi.mocked(launchBrowser).mockResolvedValue(browser);
+    vi.mocked(runAgentScenario)
+      .mockImplementationOnce(async (_browser, _configuration, scenario) =>
+        createResult(scenario.id, "passed"),
+      )
+      .mockImplementationOnce(async (_browser, _configuration, scenario) => {
+        cancelRun(run);
+        abortController.abort();
+
+        return createResult(scenario.id, "passed");
+      });
+
+    await executeRun(run.id, input, { signal: abortController.signal });
+
+    const updatedRun = runRepository.findById(run.id);
+
+    expect(updatedRun?.status).toBe("cancelled");
+    expect(updatedRun?.results).toHaveLength(1);
+    expect(updatedRun?.scenarios.map((scenario) => scenario.status)).toEqual([
+      "passed",
+      "pending",
+    ]);
+    expect(browser.close).toHaveBeenCalledOnce();
+  });
+
+  it("should not save a result when cancelled during the AI analysis", async () => {
+    const run = createRun(input);
+    const browser = createBrowser();
+    const abortController = new AbortController();
+
+    vi.mocked(launchBrowser).mockResolvedValue(browser);
+    vi.mocked(runAgentScenario).mockImplementation(
+      async (_browser, _configuration, scenario) =>
+        createResult(scenario.id, "failed"),
+    );
+    vi.mocked(analyzeFailure).mockImplementationOnce(async () => {
+      cancelRun(run);
+      abortController.abort();
+
+      return null;
+    });
+
+    await executeRun(run.id, input, { signal: abortController.signal });
+
+    const updatedRun = runRepository.findById(run.id);
+
+    expect(updatedRun?.status).toBe("cancelled");
+    expect(updatedRun?.results).toEqual([]);
+    expect(runAgentScenario).toHaveBeenCalledOnce();
+  });
+
+  it("should stay cancelled when the running scenario throws an error", async () => {
+    const run = createRun(input);
+    const browser = createBrowser();
+    const abortController = new AbortController();
+
+    vi.mocked(launchBrowser).mockResolvedValue(browser);
+    vi.mocked(runAgentScenario).mockImplementation(async () => {
+      cancelRun(run);
+      abortController.abort();
+
+      throw new Error("Unexpected execution error");
+    });
+
+    await executeRun(run.id, input, { signal: abortController.signal });
+
+    const updatedRun = runRepository.findById(run.id);
+
+    expect(updatedRun?.status).toBe("cancelled");
+    expect(updatedRun?.error).toBeNull();
+    expect(browser.close).toHaveBeenCalledOnce();
+  });
+
+  it("should still mark the run as failed when it was not cancelled", async () => {
+    const run = createRun(input);
+    const abortController = new AbortController();
+
+    vi.mocked(launchBrowser).mockRejectedValue(
+      new Error("Browser launch failed"),
+    );
+
+    await expect(
+      executeRun(run.id, input, { signal: abortController.signal }),
+    ).rejects.toThrow("Browser launch failed");
+
+    expect(runRepository.findById(run.id)?.status).toBe("failed");
   });
 });

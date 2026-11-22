@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Request, Response } from "express";
 
 import {
+  cancelRun,
   createRun,
   executeRun,
   getAllRuns,
@@ -9,6 +10,7 @@ import {
 } from "../services/run.service.js";
 
 import {
+  cancelRunController,
   createRunController,
   getAllRunsController,
   getRunController,
@@ -20,6 +22,7 @@ import type { TestRun } from "../types/run.types.js";
 
 // Mock Run Service
 vi.mock("../services/run.service.js", () => ({
+  cancelRun: vi.fn(),
   createRun: vi.fn(),
   executeRun: vi.fn(),
   getAllRuns: vi.fn(),
@@ -149,7 +152,9 @@ describe("createRunController", () => {
     });
 
     // 9. Verify background execution
-    expect(executeRun).toHaveBeenCalledWith(mockRun.id, input);
+    expect(executeRun).toHaveBeenCalledWith(mockRun.id, input, {
+      signal: expect.any(AbortSignal),
+    });
   });
 });
 
@@ -357,5 +362,95 @@ describe("createRunController scenario limit", () => {
     expect(res.status).toHaveBeenCalledWith(202);
     expect(createRun).toHaveBeenCalledTimes(1);
     expect(executeRun).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("cancelRunController", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  function createMockRun(status: TestRun["status"]): TestRun {
+    return {
+      id: "run-001",
+      targetUrl: "https://example.com",
+      status,
+      createdAt: "2026-11-22T08:00:00.000Z",
+      startedAt: "2026-11-22T08:00:01.000Z",
+      completedAt: null,
+      scenarios: [],
+      results: [],
+      requirements: "Test login functionality",
+      testPlan: null,
+      error: null,
+    };
+  }
+
+  function createCancelRequest(id: string) {
+    return {
+      params: {
+        id,
+      },
+    } as Request<{ id: string }>;
+  }
+
+  it("should return 404 when run does not exist", () => {
+    vi.mocked(getRun).mockReturnValue(undefined);
+
+    const res = createMockResponse();
+
+    cancelRunController(createCancelRequest("invalid-id"), res, vi.fn());
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: false,
+        error: expect.objectContaining({
+          code: "RUN_NOT_FOUND",
+        }),
+      }),
+    );
+    expect(cancelRun).not.toHaveBeenCalled();
+  });
+
+  it("should return 409 when the run is already finished", () => {
+    vi.mocked(getRun).mockReturnValue(createMockRun("completed"));
+
+    const res = createMockResponse();
+
+    cancelRunController(createCancelRequest("run-001"), res, vi.fn());
+
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      error: {
+        code: "RUN_ALREADY_FINISHED",
+        message: "This run is already completed and cannot be cancelled",
+      },
+    });
+    expect(cancelRun).not.toHaveBeenCalled();
+  });
+
+  it("should return 200 with the cancelled run", () => {
+    const runningRun = createMockRun("running");
+    const cancelledRun: TestRun = {
+      ...runningRun,
+      status: "cancelled",
+      completedAt: "2026-11-22T08:00:05.000Z",
+    };
+
+    vi.mocked(getRun).mockReturnValue(runningRun);
+    vi.mocked(cancelRun).mockReturnValue(cancelledRun);
+
+    const res = createMockResponse();
+
+    cancelRunController(createCancelRequest("run-001"), res, vi.fn());
+
+    expect(cancelRun).toHaveBeenCalledWith(runningRun);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      data: cancelledRun,
+    });
   });
 });
